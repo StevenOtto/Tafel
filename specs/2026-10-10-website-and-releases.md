@@ -68,3 +68,29 @@ Pending: Spotify link over the card (mouse and keyboard) in a real browser;
 the
 release workflow's first run after the secrets are added; Pages deploy once
 the repository is public.
+
+## Handoff (2026-10-10, examples and sharing)
+
+Branch `site-examples-and-meta`, uncommitted. First release `v0.1.0` is out:
+signed, notarized and stapled `Tafel.dmg`, verified with `spctl` and
+`stapler validate` on this Mac.
+
+- Examples reordered: game, explorable, poster (new), storyboard (new desk
+  photo; tea storyboard), music video, this page. The paper-plane demo is
+  removed; the storyboard result is the user's chai animation
+  (`a-cup-of-chai.mp4`: 0.8 s picture and audio crossfade for a seamless
+  loop, 0.8 MB, no audio track, autoplays muted).
+- Desk photos come from the original deliveries, lightly sharpened, as WebP
+  in two widths with `srcset`, plus a tiny blurred WebP inlined as the
+  image background while the real one loads. Old JPEGs removed.
+- "This page" miniature fills its frame (size container, `cqw` units).
+- Open Graph and Twitter tags with `assets/og.jpg` (1200×630), canonical
+  URL `https://stevenotto.github.io/Tafel/`, theme colours.
+- Footer credit linking to https://x.com/_StevenOtto.
+
+Checked: Prettier, the page script parses, every referenced file exists,
+Chrome at 1440 px (light) and 400 px (light, no horizontal scroll), the blur
+placeholder under Slow 3G, no console errors.
+
+Pending: share preview in a real card validator
+once Pages is live; the earlier Spotify and second-Mac checks.
