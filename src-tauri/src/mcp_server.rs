@@ -18,7 +18,7 @@ use rmcp::handler::server::tool::ToolRouter;
 use rmcp::handler::server::wrapper::Parameters;
 use rmcp::model::{
     CallToolResult, ContentBlock, ExtensionCapabilities, GetPromptRequestParams, GetPromptResponse,
-    GetPromptResult, JsonObject, ListPromptsResult, ListResourcesResult, MetaObject,
+    GetPromptResult, Icon, JsonObject, ListPromptsResult, ListResourcesResult, MetaObject,
     PaginatedRequestParams, ProgressNotificationParam, Prompt, PromptMessage,
     ReadResourceRequestParams, ReadResourceResponse, ReadResourceResult, Resource,
     ResourceContents, Role, ServerCapabilities, ServerInfo,
@@ -36,6 +36,10 @@ pub const UI_RESOURCE_URI: &str = "ui://tafel/delivery.html";
 pub const UI_MIME_TYPE: &str = "text/html;profile=mcp-app";
 /// The MCP App rendered inline by hosts that support the extension.
 const UI_HTML: &str = include_str!("../mcp-app/delivery.html");
+
+/// The Tafel mark, shown by hosts next to the server's name and prompts.
+const ICON_PNG: &[u8] = include_bytes!("../../brand/web/apple-touch-icon.png");
+const ICON_SVG: &str = include_str!("../../public/tafel.svg");
 
 const VISUAL_WORKFLOW: &str =
     include_str!("../../skills/tafel-visual-prompting/references/workflow.md");
@@ -68,6 +72,22 @@ fn app_only_meta() -> MetaObject {
 
 fn b64(bytes: &[u8]) -> String {
     base64::engine::general_purpose::STANDARD.encode(bytes)
+}
+
+/// Embedded as data URIs: the server has no public URL to point at. PNG
+/// first, the format every icon-rendering host must support.
+fn server_icons() -> Vec<Icon> {
+    vec![
+        Icon::new(format!("data:image/png;base64,{}", b64(ICON_PNG)))
+            .with_mime_type("image/png")
+            .with_sizes(vec!["180x180".to_string()]),
+        Icon::new(format!(
+            "data:image/svg+xml;base64,{}",
+            b64(ICON_SVG.as_bytes())
+        ))
+        .with_mime_type("image/svg+xml")
+        .with_sizes(vec!["any".to_string()]),
+    ]
 }
 
 fn age_seconds(now_ms: u64, then_ms: u64) -> u64 {
@@ -751,6 +771,7 @@ impl ServerHandler for TafelMcp {
         info.capabilities = capabilities;
         info.server_info.name = "tafel".to_string();
         info.server_info.title = Some("Tafel".to_string());
+        info.server_info.icons = Some(server_icons());
         info.server_info.version = env!("CARGO_PKG_VERSION").to_string();
         info.instructions = Some(
             "Tafel turns the user's physical desk into visual input: a camera watches \
@@ -956,6 +977,18 @@ mod tests {
         assert_eq!(structured["images"][0]["stale"], true);
         assert_eq!(structured["images"][1]["cameraName"], "Wall");
         assert_eq!(structured["images"][1]["stale"], false);
+    }
+
+    #[test]
+    fn server_info_carries_the_tafel_icon() {
+        let dir = tempfile::tempdir().unwrap();
+        let bus = Arc::new(SketchBus::new(dir.path().join("sessions")));
+        let icons = TafelMcp::new(bus).get_info().server_info.icons.unwrap();
+        assert_eq!(icons.len(), 2);
+        let png = "data:image/png;base64,iVBORw0KGgo";
+        assert!(icons[0].src.starts_with(png));
+        assert_eq!(icons[0].mime_type.as_deref(), Some("image/png"));
+        assert!(icons[1].src.starts_with("data:image/svg+xml;base64,"));
     }
 
     /// AC1: reading the desk or a delivery is reported to the window.
