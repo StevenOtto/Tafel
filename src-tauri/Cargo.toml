@@ -1,0 +1,31 @@
+[package]
+name = "tafel"
+version = "0.1.0"
+description = "Desk camera as visual input for agents"
+authors = ["Steven Otto"]
+edition = "2021"
+
+[lib]
+name = "tafel_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+swift-rs = { version = "1.0.8", features = ["build"] }
+
+[dependencies]
+tauri = { version = "2", features = ["macos-private-api"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+base64 = "0.22"
+tokio = { version = "1", features = ["time", "sync", "macros", "rt"] }
+rmcp = { version = "=3.1.3", features = ["server", "macros", "transport-streamable-http-server"] }
+axum = "0.8"
+schemars = "1.0"
+swift-rs = "1.0.8"
+# The only outbound path in the app: fetching frames from a network camera,
+# and only ever to a host on the local network (enforced in netcam.rs).
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+
+[dev-dependencies]
+tempfile = "3"

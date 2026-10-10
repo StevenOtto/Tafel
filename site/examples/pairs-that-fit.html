@@ -1,0 +1,819 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The pairs that fit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F3F4F2;
+  --surface: #FFFFFF;
+  --ink: #15191F;
+  --muted: #5D6570;
+  --line: #D9DCD8;
+  --accent: #2346A0;
+  --accent-tint: rgba(35, 70, 160, .08);
+  --clash: #B42318;
+  --purine: #CDD2CC;
+  --pyr: #EDEFEC;
+  --shadow: rgba(21, 25, 31, .18);
+  --serif: "Literata", Georgia, "Times New Roman", serif;
+  --sans: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --s1: .25rem; --s2: .5rem; --s3: .75rem; --s4: 1rem; --s6: 1.5rem;
+  --s8: 2rem; --s12: 3rem; --s16: 4rem; --s24: 6rem;
+  --radius: 6px;
+  --measure: 36rem;
+  --wide: 52rem;
+  --bar: 2.75rem;
+  color-scheme: light;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111418; --surface: #171B20; --ink: #E6E9ED; --muted: #98A1AC; --line: #2A3038;
+    --accent: #8FA9F0; --accent-tint: rgba(143, 169, 240, .1); --clash: #F07563;
+    --purine: #3B424B; --pyr: #232830; --shadow: rgba(0, 0, 0, .5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111418; --surface: #171B20; --ink: #E6E9ED; --muted: #98A1AC; --line: #2A3038;
+  --accent: #8FA9F0; --accent-tint: rgba(143, 169, 240, .1); --clash: #F07563;
+  --purine: #3B424B; --pyr: #232830; --shadow: rgba(0, 0, 0, .5);
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + var(--bar) + var(--s4)); -webkit-text-size-adjust: 100%; }
+@media (min-width: 64rem) { html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + var(--s8)); } }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--serif); font-size: 1.0625rem; line-height: 1.7; }
+@media (min-width: 40rem) { body { font-size: 1.125rem; } }
+
+button { font: inherit; color: inherit; transition: transform 120ms ease-out, border-color 150ms ease-out, background-color 150ms ease-out, color 150ms ease-out; }
+button:active { transform: translateY(1px); }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Layout: a sticky index of the five questions beside one reading column. */
+.layout { max-width: 78rem; margin: 0 auto; }
+@media (min-width: 64rem) {
+  .layout { display: grid; grid-template-columns: 10rem minmax(0, 1fr); column-gap: var(--s16); padding: 0 var(--s8); }
+}
+.index {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 10;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+.index ol { list-style: none; margin: 0 auto; padding: 0 var(--s2); max-width: var(--measure); display: flex; justify-content: space-between; }
+.index a {
+  display: flex; align-items: center; gap: var(--s2);
+  min-height: var(--bar); padding: 0 var(--s2);
+  font: 500 .875rem/1 var(--sans); color: var(--muted); text-decoration: none;
+  transition: color 150ms ease-out, box-shadow 150ms ease-out;
+}
+.index a[aria-current="true"] { color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
+.index .num { display: none; }
+@media (min-width: 64rem) {
+  .index { align-self: start; top: calc(env(safe-area-inset-top, 0px) + var(--s24)); margin-top: var(--s24); border: 0; background: none; }
+  .index ol { flex-direction: column; gap: var(--s1); padding: 0; }
+  .index a { padding: 0; }
+  .index a[aria-current="true"] { box-shadow: none; }
+  .index a[aria-current="true"] .num { border-color: var(--accent); background: var(--accent); color: var(--bg); }
+  .index .num { display: inline-grid; }
+}
+.num {
+  flex: none; place-items: center;
+  width: 1.75rem; height: 1.75rem;
+  border: 1.5px solid var(--muted); border-radius: 50%;
+  font: 500 .8125rem/1 var(--sans); color: var(--muted);
+  transition: background-color 150ms ease-out, border-color 150ms ease-out, color 150ms ease-out;
+}
+
+main { padding: 0 var(--s4) var(--s24); }
+@media (min-width: 40rem) { main { padding-inline: var(--s8); } }
+@media (min-width: 64rem) { main { padding: 0 0 var(--s24); } }
+
+header > *, section > *, footer > * { max-width: var(--measure); margin-inline: auto; }
+@media (min-width: 64rem) { header > *, section > *, footer > * { margin-inline: 0; } }
+header { padding-top: var(--s16); }
+@media (min-width: 64rem) { header { padding-top: var(--s24); } }
+h1 { font-size: clamp(2.5rem, 8vw, 4rem); line-height: 1.04; font-weight: 600; letter-spacing: -.015em; margin: 0 0 var(--s6); }
+.lede { font-size: 1.25rem; line-height: 1.55; color: var(--muted); margin: 0; }
+
+section { padding-top: var(--s24); }
+h2 { display: flex; align-items: baseline; gap: var(--s3); font-size: 1.75rem; line-height: 1.2; font-weight: 600; margin: 0 0 var(--s6); }
+h2 .num { display: inline-grid; border-color: var(--accent); color: var(--accent); transform: translateY(-.15rem); }
+@media (min-width: 64rem) { h2 .num { display: none; } }
+p { margin: 0 0 var(--s4); }
+
+.figure {
+  max-width: var(--wide);
+  margin: var(--s8) auto;
+  padding: var(--s4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+@media (min-width: 40rem) { .figure { padding: var(--s6); } }
+@media (min-width: 64rem) { .figure { margin-inline: 0; } }
+.caption { font: 400 .875rem/1.5 var(--sans); color: var(--muted); margin: var(--s4) 0 0; max-width: 40rem; }
+.label { font: 500 .8125rem/1.4 var(--sans); color: var(--muted); }
+
+/* Bench drawing */
+.bench-svg { display: block; width: 100%; height: auto; }
+.rail { stroke: var(--muted); stroke-width: 4; stroke-linecap: round; }
+.rail.ghost { stroke-width: 1.5; stroke-dasharray: 4 5; opacity: .8; }
+.phosphate { fill: var(--surface); stroke: var(--muted); stroke-width: 2; }
+.stub { stroke: var(--ink); stroke-width: 2.5; }
+.shadow { fill: var(--shadow); }
+.base { stroke: var(--ink); stroke-width: 1.5; stroke-linejoin: round; }
+.base.R { fill: var(--purine); }
+.base.Y { fill: var(--pyr); }
+.ring-edge { stroke: var(--ink); stroke-width: 1; opacity: .5; }
+.base-label { font: 600 26px var(--sans); fill: var(--ink); }
+.donor { fill: var(--accent); }
+.acceptor { fill: var(--surface); stroke: var(--accent); stroke-width: 2; }
+.hbond { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 3 3; }
+.clash-mark, .mismatch { stroke: var(--clash); stroke-width: 2.5; stroke-linecap: round; }
+.arrow { fill: var(--muted); }
+.dim { stroke: var(--muted); stroke-width: 1.25; }
+.dim-label { font: 500 13px var(--sans); fill: var(--muted); }
+
+.bench-controls { display: flex; flex-wrap: wrap; gap: var(--s4) var(--s8); margin-top: var(--s4); }
+.control-group { display: flex; flex-direction: column; gap: var(--s1); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--bg); }
+.seg button {
+  min-width: var(--bar); min-height: var(--bar); padding: 0 var(--s3);
+  border: 0; border-right: 1px solid var(--line); background: transparent;
+  font: 600 1rem/1 var(--sans); cursor: pointer;
+}
+.seg button:last-child { border-right: 0; }
+.seg button:focus-visible { outline-offset: -3px; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.seg.text button { font-weight: 500; font-size: .9375rem; }
+.verdict { font: 400 1rem/1.55 var(--sans); margin: var(--s4) 0 0; min-height: 3.1em; }
+.verdict strong { font-weight: 600; }
+.ok { color: var(--accent); }
+.bad { color: var(--clash); }
+
+/* Who: contributions mapped onto one drawing */
+.who-grid { display: grid; gap: var(--s4); grid-template-areas: "drawing" "people"; }
+@media (min-width: 48rem) { .who-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); grid-template-areas: "people drawing"; gap: var(--s6); } }
+.who-drawing {
+  grid-area: drawing;
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + var(--bar));
+  z-index: 1;
+  align-self: start;
+  background: var(--surface);
+  padding: var(--s2) 0;
+  border-bottom: 1px solid var(--line);
+}
+@media (min-width: 48rem) { .who-drawing { border-bottom: 0; } }
+@media (min-width: 64rem) { .who-drawing { top: calc(env(safe-area-inset-top, 0px) + var(--s8)); } }
+.who-drawing .caption { margin-top: var(--s2); min-height: 3em; }
+.who-drawing [data-part] { transition: opacity 200ms ease-in-out; }
+.who-drawing.has-selection [data-part] { opacity: .15; }
+.who-drawing.has-selection [data-part].on { opacity: 1; }
+.who-drawing [data-part].on .rail, .who-drawing [data-part].on .dim, .who-drawing [data-part].on .stub { stroke: var(--accent); }
+.who-drawing [data-part].on .arrow, .who-drawing [data-part].on .dim-label, .who-drawing [data-part].on .base-label { fill: var(--accent); }
+.who-drawing [data-part].on .base { stroke: var(--accent); stroke-width: 2.5; }
+.people { grid-area: people; list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
+.person {
+  display: block; width: 100%; min-height: var(--bar); text-align: left;
+  padding: var(--s3) var(--s4);
+  background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius);
+  cursor: pointer;
+}
+.person[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.person .name { display: block; font: 600 .9375rem/1.4 var(--sans); }
+.person .role { display: block; font: 400 .875rem/1.5 var(--sans); color: var(--muted); margin-top: 2px; }
+
+/* How */
+.how-grid { display: grid; gap: var(--s6); margin-top: var(--s4); }
+@media (min-width: 50rem) { .how-grid { grid-template-columns: minmax(0, 19rem) minmax(0, 1fr); align-items: start; } }
+.scroll { overflow-x: auto; }
+.matrix { width: 100%; border-collapse: separate; border-spacing: 3px; table-layout: fixed; }
+.matrix th { font: 600 .9375rem/1 var(--sans); color: var(--muted); padding: var(--s2) 0; }
+.matrix thead th:first-child, .matrix tbody th { width: 2rem; }
+.cell {
+  width: 100%; min-height: var(--bar); padding: var(--s1);
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg);
+  font: 500 .8125rem/1.2 var(--sans); cursor: pointer;
+}
+.cell.fit { color: var(--accent); font-weight: 600; }
+.cell.bad { color: var(--clash); }
+.cell.size { color: var(--muted); }
+.cell[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+
+/* Why */
+.ladder { display: flex; flex-wrap: wrap; gap: var(--s4) var(--s1); }
+.rung { display: flex; flex-direction: column; align-items: center; width: var(--bar); }
+.tile {
+  width: var(--bar); height: var(--bar); padding: 0;
+  border: 1px solid var(--muted); border-radius: var(--radius);
+  font: 600 1.0625rem/1 var(--sans); color: var(--ink);
+}
+.tile.R { background: var(--purine); }
+.tile.Y { background: var(--pyr); }
+.tile.top { cursor: pointer; }
+.tile:disabled { cursor: default; }
+.tile.hidden { background: transparent; border-style: dashed; color: var(--muted); cursor: pointer; }
+.ticks { height: 1.25rem; display: flex; gap: 3px; padding: 2px 0; }
+.ticks i { width: 2px; background: var(--accent); }
+.strand-note { font: 400 .8125rem/1.4 var(--sans); color: var(--muted); margin: 0 0 var(--s3); }
+.actions { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s6); }
+.action {
+  min-height: var(--bar); padding: 0 var(--s4);
+  border: 1px solid var(--ink); border-radius: var(--radius); background: transparent;
+  font: 500 .9375rem/1 var(--sans); cursor: pointer;
+}
+.action[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.tally { font: 400 1rem/1.6 var(--sans); margin: var(--s6) 0 0; max-width: 40rem; }
+.tally b { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* When: true-scale span with the decisive months expanded */
+.span { padding: 0 var(--s4); }
+.axis { position: relative; height: var(--bar); }
+.axis::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--muted); }
+.tick { position: absolute; top: 50%; width: 1px; height: 9px; background: var(--muted); transform: translateY(-50%); }
+.tick-label { position: absolute; top: calc(50% + 8px); font: 500 .75rem/1.4 var(--sans); color: var(--muted); transform: translateX(-50%); white-space: nowrap; }
+.mark { position: absolute; top: 50%; width: 9px; height: 9px; border-radius: 50%; background: var(--ink); transform: translate(-50%, -50%); }
+.band { position: absolute; top: 20%; bottom: 20%; min-width: 4px; background: var(--accent); }
+.connector { display: block; width: 100%; height: 2rem; }
+.connector polygon { fill: var(--accent-tint); }
+.connector line { stroke: var(--accent); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.zoom { background: var(--accent-tint); border-radius: var(--radius); margin-bottom: var(--s6); }
+.zoom .axis { height: 4.5rem; }
+.ev {
+  position: absolute; top: 50%; width: 13px; height: 13px; padding: 0;
+  border: 1.5px solid var(--accent); border-radius: 50%; background: var(--accent);
+  transform: translate(-50%, -50%); cursor: pointer;
+}
+.ev:active { transform: translate(-50%, -50%) scale(.9); }
+.ev::after { content: ""; position: absolute; inset: -16px -8px; }
+.ev.approx { background: var(--surface); }
+.ev-label { display: none; position: absolute; bottom: calc(50% + 12px); font: 500 .8125rem/1.3 var(--sans); color: var(--ink); white-space: nowrap; }
+@media (min-width: 40rem) { .ev-label { display: block; } }
+.ev-label.c { transform: translateX(-50%); }
+.ev-label.r { transform: translateX(calc(-100% + 6px)); }
+.ev-label.l { transform: translateX(-6px); }
+
+.timeline { list-style: none; margin: var(--s8) auto 0; padding: 0; border-left: 1.5px solid var(--line); }
+.timeline li { position: relative; padding: var(--s2) var(--s3) var(--s4) var(--s6); margin-bottom: var(--s2); border-radius: 0 var(--radius) var(--radius) 0; transition: background-color 300ms ease-out; }
+.timeline li::before {
+  content: ""; position: absolute; left: -5.5px; top: 1.05rem;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--bg); border: 1.5px solid var(--accent);
+}
+.timeline li.key::before { background: var(--accent); }
+.timeline li.flash { background: var(--accent-tint); }
+.timeline time { display: block; font: 600 .875rem/1.6 var(--sans); color: var(--accent); }
+.timeline p { margin: 0; }
+.set-bench {
+  margin-top: var(--s2); min-height: var(--bar); padding: 0 var(--s4);
+  border: 1px solid var(--accent); border-radius: var(--radius); background: transparent; color: var(--accent);
+  font: 500 .875rem/1 var(--sans); cursor: pointer;
+}
+
+footer { padding-top: var(--s16); }
+footer h3 { font: 600 1rem/1.4 var(--sans); margin: 0 0 var(--s2); }
+footer p { font: 400 .875rem/1.6 var(--sans); color: var(--muted); }
+
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="index" aria-label="Sections">
+  <ol>
+    <li><a href="#what"><span class="num" aria-hidden="true">1</span>What</a></li>
+    <li><a href="#who"><span class="num" aria-hidden="true">2</span>Who</a></li>
+    <li><a href="#how"><span class="num" aria-hidden="true">3</span>How</a></li>
+    <li><a href="#why"><span class="num" aria-hidden="true">4</span>Why</a></li>
+    <li><a href="#when"><span class="num" aria-hidden="true">5</span>When</a></li>
+  </ol>
+</nav>
+
+<main>
+<header>
+  <h1>The pairs that fit</h1>
+  <p class="lede">One morning in February 1953, James Watson pushed cardboard cut-outs of DNA's four bases around a desk in Cambridge until two of the pairs came out the same shape. This page lets you push them around yourself.</p>
+</header>
+
+<section id="what" aria-labelledby="what-h">
+  <h2 id="what-h"><span class="num" aria-hidden="true">1</span>What was found</h2>
+  <p>DNA is two strands wound around each other. Each strand is a backbone carrying a string of bases, and there are four kinds: adenine (A), guanine (G), cytosine (C) and thymine (T). A and G are <em>purines</em>, with two fused rings. C and T are <em>pyrimidines</em>, with one. The strands hold together where a base on one strand meets a base on the other.</p>
+  <p>The finding: A pairs only with T, and G only with C. Each correct pair is one purine plus one pyrimidine, so both pairs have almost exactly the same overall width. That is what lets a perfectly regular helix carry any sequence at all.</p>
+  <div class="figure" data-bench></div>
+  <p>Try all sixteen combinations. Only two fit. The rails are the two backbones, drawn at the one width the double helix allows. Filled dots are hydrogens a base offers to its partner, open rings are atoms that can accept one.</p>
+</section>
+
+<section id="who" aria-labelledby="who-h">
+  <h2 id="who-h"><span class="num" aria-hidden="true">2</span>Who was involved</h2>
+  <p>Watson made the final move, but nearly every piece he moved came from someone else. Each person below supplied one part of the drawing. Select a name to see which.</p>
+  <div class="figure">
+    <div class="who-grid">
+      <div class="who-drawing" id="who-drawing">
+        <svg class="bench-svg" id="who-svg" viewBox="0 0 440 236" role="img" aria-labelledby="who-caption"></svg>
+        <p class="caption" id="who-caption" aria-live="polite">An A-T pair between the two backbones. Nothing selected.</p>
+      </div>
+      <ul class="people" id="people"></ul>
+    </div>
+  </div>
+</section>
+
+<section id="how" aria-labelledby="how-h">
+  <h2 id="how-h"><span class="num" aria-hidden="true">3</span>How the pairs hold</h2>
+  <p>A hydrogen bond forms when a hydrogen attached to a nitrogen or oxygen (a <em>donor</em>) points at a nitrogen or oxygen with a free pair of electrons (an <em>acceptor</em>). Two donors facing each other repel. Two acceptors facing each other have nothing to share. Each base presents a fixed pattern of donors and acceptors along its pairing edge, and a pair holds only if the two patterns interlock.</p>
+  <p>Where the hydrogens sit is the subtle part. G and T each exist in two forms, called tautomers, that differ in whether a hydrogen sits on a ring nitrogen (the keto form) or on an oxygen (the enol form). The textbooks Watson used drew the enol forms. Donohue, who knew the crystal structures of related small molecules, told him the keto forms were the right ones.</p>
+  <p>Switch between the two and watch the table. Under the textbook forms, none of the sixteen combinations holds on this edge. Under Donohue's forms exactly two do: A-T with two hydrogen bonds and G-C with three.</p>
+  <div class="figure" id="how-bench">
+    <div class="control-group">
+      <span class="label" id="forms-label">Forms of G and T</span>
+      <div class="seg text" role="group" aria-labelledby="forms-label">
+        <button type="button" data-forms="enol">1953 textbook</button>
+        <button type="button" data-forms="keto">Donohue's</button>
+      </div>
+    </div>
+    <div class="how-grid">
+      <div class="scroll">
+        <table class="matrix" id="matrix">
+          <thead>
+            <tr><th scope="col"><span class="sr">Left strand down, right strand across</span></th><th scope="col">A</th><th scope="col">G</th><th scope="col">C</th><th scope="col">T</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div data-bench></div>
+    </div>
+    <p class="caption">Rows are the base on the left strand, columns the base on the right. Tap a cell to put that pair on the bench. Dashed lines are hydrogen bonds, red crosses are clashes.</p>
+  </div>
+</section>
+
+<section id="why" aria-labelledby="why-h">
+  <h2 id="why-h"><span class="num" aria-hidden="true">4</span>Why it matters</h2>
+  <p>Because every correct pair has the same width, the sequence along a strand is unconstrained. The helix does not care what it carries, so it can carry information.</p>
+  <p>Because A always faces T and G always faces C, Chargaff's ratios follow automatically. Tap any base on the top strand to change it, and watch the counts.</p>
+  <div class="figure">
+    <p class="strand-note">Top strand, read left to right. The partner strand below runs in the opposite direction.</p>
+    <div class="ladder" id="ladder"></div>
+    <p class="tally" id="tally" aria-live="polite"></p>
+    <div class="actions">
+      <button type="button" class="action" id="shuffle">Shuffle the strand</button>
+      <button type="button" class="action" id="cover" aria-pressed="false">Cover the partner strand</button>
+      <button type="button" class="action" id="reset">Reset</button>
+    </div>
+  </div>
+  <p>And because each strand fixes the other completely, a cell can separate the two and build a new partner for each. Watson and Crick's 1953 paper closed by noting, in one deliberately understated sentence, that the pairing suggested a copying mechanism. Cover the partner strand, predict each base, then tap to check. You will not need any information beyond the top strand.</p>
+</section>
+
+<section id="when" aria-labelledby="when-h">
+  <h2 id="when-h"><span class="num" aria-hidden="true">5</span>When it happened</h2>
+  <p>The top line runs from 1947 to 1962 at true scale. The four months that decided the structure are the thin blue sliver, opened up below it. Tap a point to find it in the list.</p>
+  <div class="figure">
+    <div class="span" aria-hidden="true">
+      <div class="axis">
+        <span class="tick" style="left:2.94%"></span><span class="tick-label" style="left:2.94%">1947</span>
+        <span class="tick" style="left:20.59%"></span><span class="tick-label" style="left:20.59%">1950</span>
+        <span class="tick" style="left:38.24%"></span><span class="tick-label" style="left:38.24%">1953</span>
+        <span class="tick" style="left:67.65%"></span><span class="tick-label" style="left:67.65%">1958</span>
+        <span class="tick" style="left:91.18%"></span><span class="tick-label" style="left:91.18%">1962</span>
+        <span class="mark" style="left:5.88%"></span>
+        <span class="mark" style="left:23.53%"></span>
+        <span class="mark" style="left:34.53%"></span>
+        <span class="band" style="left:38.24%;width:1.94%"></span>
+        <span class="mark" style="left:69.35%"></span>
+        <span class="mark" style="left:96.71%"></span>
+      </div>
+    </div>
+    <div class="span" aria-hidden="true">
+      <svg class="connector" viewBox="0 0 100 24" preserveAspectRatio="none">
+        <polygon points="38.24,0 40.18,0 100,24 0,24"></polygon>
+        <line x1="38.24" y1="0" x2="0" y2="24"></line>
+        <line x1="40.18" y1="0" x2="100" y2="24"></line>
+      </svg>
+    </div>
+    <div class="zoom span">
+      <div class="axis">
+        <span class="tick" style="left:0%"></span><span class="tick-label" style="left:0%;transform:none">Jan 1953</span>
+        <span class="tick" style="left:25.83%"></span><span class="tick-label" style="left:25.83%;transform:none">Feb</span>
+        <span class="tick" style="left:49.17%"></span><span class="tick-label" style="left:49.17%;transform:none">Mar</span>
+        <span class="tick" style="left:75%"></span><span class="tick-label" style="left:75%;transform:none">Apr</span>
+        <span class="ev-label c" style="left:24.17%" aria-hidden="true">Photo 51</span>
+        <span class="ev-label r" style="left:41.67%" aria-hidden="true">Like with like</span>
+        <span class="ev-label l" style="left:48.33%" aria-hidden="true">A-T and G-C</span>
+        <span class="ev-label r" style="left:95%" aria-hidden="true">Nature</span>
+        <button type="button" class="ev" style="left:24.17%" data-target="t-photo" aria-label="30 January 1953, Watson sees Photo 51"></button>
+        <button type="button" class="ev approx" style="left:41.67%" data-target="t-like" aria-label="Late February 1953, the like-with-like model, date approximate"></button>
+        <button type="button" class="ev" style="left:48.33%" data-target="t-pairs" aria-label="28 February 1953, the A-T and G-C pairs"></button>
+        <button type="button" class="ev" style="left:95%" data-target="t-nature" aria-label="25 April 1953, publication in Nature"></button>
+      </div>
+    </div>
+    <p class="caption">Hollow point: the exact date is uncertain.</p>
+  </div>
+  <ol class="timeline">
+    <li><time datetime="1947">1947</time><p>Gulland and Jordan's titrations of DNA show that most of its bases are hydrogen-bonded to one another.</p></li>
+    <li><time datetime="1950">1950</time><p>Chargaff publishes his base ratios: in DNA from many species, A roughly equals T and G roughly equals C.</p></li>
+    <li><time datetime="1952-05">May 1952</time><p>Franklin and Gosling record Photo 51, an X-ray pattern of the hydrated B form of DNA.</p></li>
+    <li id="t-photo"><time datetime="1953-01-30">30 January 1953</time><p>Wilkins shows Watson Photo 51. Its cross-shaped pattern signals a helix.</p></li>
+    <li id="t-like"><time datetime="1953-02">Late February 1953</time><p>Watson builds a like-with-like model, pairing A with A and G with G, using the textbook forms. <em>The Double Helix</em> includes a schematic of this version.</p>
+      <button type="button" class="set-bench" data-left="A" data-right="A" data-forms="enol">Put A-A on the bench</button></li>
+    <li><time datetime="1953-02">A day later</time><p>Donohue objects: the textbook forms of G and T are almost certainly wrong.</p>
+      <button type="button" class="set-bench" data-left="G" data-right="C" data-forms="enol">Put G-C on the bench, textbook forms</button></li>
+    <li id="t-pairs" class="key"><time datetime="1953-02-28">28 February 1953</time><p>Using cardboard bases in Donohue's forms, Watson finds that A-T, held by two hydrogen bonds, has the same shape as G-C, held by three.</p>
+      <button type="button" class="set-bench" data-left="A" data-right="T" data-forms="keto">Put A-T on the bench</button></li>
+    <li id="t-nature"><time datetime="1953-04-25">25 April 1953</time><p><em>Nature</em> publishes Watson and Crick's one-page letter, alongside papers by Wilkins, Stokes and Wilson and by Franklin and Gosling.</p></li>
+    <li><time datetime="1958-04-16">16 April 1958</time><p>Franklin dies at 37.</p></li>
+    <li><time datetime="1962">1962</time><p>Crick, Watson and Wilkins receive the Nobel Prize in Physiology or Medicine. The prize is not awarded posthumously.</p></li>
+  </ol>
+</section>
+
+<footer>
+  <h3>What this page simplifies</h3>
+  <p>Each pairing edge is reduced to three sites, and the shapes are schematic, not measured. The real A-T and G-C pairs differ in width by a fraction of an angstrom, not zero. Watson's like-with-like pairs used a different edge of the bases than the one modelled here, so the bench shows why they fail on width, not the exact bonds he drew. Other pairings, such as the G-T wobble pair, do occur in RNA and as copying errors, with shifted geometry this model does not capture. Each person in the second section contributed far more than the one part highlighted.</p>
+  <p>Primary source: J. D. Watson and F. H. C. Crick, Molecular Structure of Nucleic Acids, <em>Nature</em> 171, 737 (1953).</p>
+</footer>
+</main>
+</div>
+
+<script>
+(function () {
+  const BASES = ['A', 'G', 'C', 'T'];
+  const PURINES = new Set(['A', 'G']);
+  const NAMES = { A: 'adenine', G: 'guanine', C: 'cytosine', T: 'thymine' };
+  const PARTNER = { A: 'T', T: 'A', G: 'C', C: 'G' };
+  // Pairing-edge sites, major-groove side first. D donor, A acceptor, null nothing to offer.
+  const EDGE = {
+    keto: { A: ['D', 'A', null], G: ['A', 'D', 'D'], C: ['D', 'A', 'A'], T: ['A', 'D', 'A'] },
+    enol: { A: ['D', 'A', null], G: ['D', 'A', 'D'], C: ['D', 'A', 'A'], T: ['D', 'A', 'A'] }
+  };
+  const INITIAL = 'ATGCGTACGTTAGCCA'.split('');
+  const state = { left: 'A', right: 'T', forms: 'keto', seq: INITIAL.slice(), covered: false, revealed: new Set() };
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const cls = b => (PURINES.has(b) ? 'R' : 'Y');
+
+  function evaluate(l, r, forms) {
+    const lp = PURINES.has(l), rp = PURINES.has(r);
+    if (lp && rp) return { kind: 'wide' };
+    if (!lp && !rp) return { kind: 'narrow' };
+    const le = EDGE[forms][l], re = EDGE[forms][r];
+    let bonds = 0, clashes = 0;
+    const sites = le.map((a, i) => {
+      const b = re[i];
+      if (!a || !b) return 'none';
+      if (a !== b) { bonds++; return 'bond'; }
+      clashes++;
+      return 'clash';
+    });
+    return { kind: clashes === 0 && bonds >= 2 ? 'fit' : 'clash', bonds, clashes, sites };
+  }
+
+  function verdict(l, r, res, forms) {
+    const pair = `${l}-${r}`;
+    const usesEnol = forms === 'enol' && [l, r].some(b => b === 'G' || b === 'T') && res.sites;
+    const note = usesEnol ? ' These are the 1953 textbook forms of G and T.' : '';
+    if (res.kind === 'fit') return `<strong class="ok">${pair} fits.</strong> One purine and one pyrimidine span exactly the helix width, and ${res.bonds} hydrogen bonds line up with no clashes.${note}`;
+    if (res.kind === 'clash') {
+      const sites = res.clashes === 1 ? 'one site faces' : `${res.clashes} sites face`;
+      const bonds = res.bonds === 1 ? ' Only one hydrogen bond forms.' : res.bonds === 0 ? ' No hydrogen bond forms.' : '';
+      return `<strong class="bad">${pair} clashes.</strong> The width is right, but ${sites} a partner of the same kind.${bonds}${note}`;
+    }
+    if (res.kind === 'wide') return `<strong class="bad">${pair} is too wide.</strong> Two purines need more room than the helix has, so the backbone would bulge at every such pair.`;
+    return `<strong class="bad">${pair} is too narrow.</strong> Two pyrimidines leave a gap no hydrogen bond can bridge, so the backbone would pinch inward at every such pair.`;
+  }
+
+  const NS = 'http://www.w3.org/2000/svg';
+  function svgEl(name, attrs, parent) {
+    const n = document.createElementNS(NS, name);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+
+  // Local units run from the backbone toward the partner. Both ring types share one size, so a purine is exactly one ring longer.
+  const RAIL_L = 60, RAIL_R = 340, CY = 100, GAP = 20, SITE_DY = [-26, 0, 26];
+  const SHAPES = {
+    Y: { len: 95, stub: 18.8, label: 56.9, inner: null,
+      outline: [[18.8, -22], [56.9, -44], [95, -22], [95, 22], [56.9, 44], [18.8, 22]] },
+    R: { len: 164.9, stub: 21, label: 126.8, inner: [[88.7, -22], [88.7, 22]],
+      outline: [[21, 0], [46.85, -35.6], [88.7, -22], [126.8, -44], [164.9, -22], [164.9, 22], [126.8, 44], [88.7, 22], [46.85, 35.6]] }
+  };
+  const siteX = (len, dy) => len - Math.max(0, Math.abs(dy) - 22) * 1.732;
+
+  function drawRail(g, x, ghost) {
+    svgEl('line', { x1: x, y1: 14, x2: x, y2: 186, class: ghost ? 'rail ghost' : 'rail' }, g);
+    if (ghost) return;
+    [30, 65, 135, 170].forEach(y => svgEl('circle', { cx: x, cy: y, r: 5, class: 'phosphate' }, g));
+  }
+
+  function drawBase(g, b, railX, dir, labelGroup) {
+    const sh = SHAPES[cls(b)];
+    const pts = sh.outline.map(([x, y]) => `${railX + dir * x},${CY + y}`).join(' ');
+    svgEl('line', { x1: railX, y1: CY, x2: railX + dir * sh.stub, y2: CY, class: 'stub' }, g);
+    svgEl('polygon', { points: pts, class: 'shadow', transform: 'translate(3 3)' }, g);
+    svgEl('polygon', { points: pts, class: 'base ' + cls(b) }, g);
+    if (sh.inner) {
+      const [[x1, y1], [x2, y2]] = sh.inner;
+      svgEl('line', { x1: railX + dir * x1, y1: CY + y1, x2: railX + dir * x2, y2: CY + y2, class: 'ring-edge' }, g);
+    }
+    svgEl('text', { x: railX + dir * sh.label, y: CY + 9, 'text-anchor': 'middle', class: 'base-label' }, labelGroup || g).textContent = b;
+  }
+
+  function drawSite(g, x, y, kind) {
+    if (kind === 'D') svgEl('circle', { cx: x, cy: y, r: 5, class: 'donor' }, g);
+    if (kind === 'A') svgEl('circle', { cx: x, cy: y, r: 5, class: 'acceptor' }, g);
+  }
+
+  const benches = [];
+  document.querySelectorAll('[data-bench]').forEach(host => {
+    const svg = svgEl('svg', { viewBox: '0 0 440 200', role: 'img', class: 'bench-svg' });
+    host.appendChild(svg);
+    const controls = document.createElement('div');
+    controls.className = 'bench-controls';
+    const buttons = [];
+    ['left', 'right'].forEach(side => {
+      const grp = document.createElement('div');
+      grp.className = 'control-group';
+      const label = document.createElement('span');
+      label.className = 'label';
+      label.textContent = side === 'left' ? 'Left strand' : 'Right strand';
+      const seg = document.createElement('div');
+      seg.className = 'seg';
+      seg.setAttribute('role', 'group');
+      seg.setAttribute('aria-label', label.textContent);
+      BASES.forEach(base => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = base;
+        btn.setAttribute('aria-label', `${NAMES[base]}, ${side} strand`);
+        btn.addEventListener('click', () => { state[side] = base; renderAll(); });
+        buttons.push({ btn, side, base });
+        seg.appendChild(btn);
+      });
+      grp.append(label, seg);
+      controls.appendChild(grp);
+    });
+    const out = document.createElement('p');
+    out.className = 'verdict';
+    out.setAttribute('aria-live', 'polite');
+    host.append(controls, out);
+    benches.push({ svg, buttons, out });
+  });
+
+  function renderBench(bench) {
+    const { left, right, forms } = state;
+    const res = evaluate(left, right, forms);
+    const svg = bench.svg;
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    const Ll = SHAPES[cls(left)].len, Rl = SHAPES[cls(right)].len;
+    let railR = RAIL_L + Ll + GAP + Rl;
+    const shifted = Math.abs(railR - RAIL_R) > 1;
+    if (!shifted) railR = RAIL_R;
+    if (shifted) drawRail(svg, RAIL_R, true);
+    drawRail(svg, RAIL_L, false);
+    drawRail(svg, railR, false);
+    drawBase(svg, left, RAIL_L, 1);
+    drawBase(svg, right, railR, -1);
+    if (res.sites) {
+      SITE_DY.forEach((dy, i) => {
+        const y = CY + dy, lx = RAIL_L + siteX(Ll, dy), rx = railR - siteX(Rl, dy);
+        if (res.sites[i] === 'bond') svgEl('line', { x1: lx + 5, y1: y, x2: rx - 5, y2: y, class: 'hbond' }, svg);
+        if (res.sites[i] === 'clash') {
+          const mx = (lx + rx) / 2;
+          svgEl('line', { x1: mx - 5, y1: y - 5, x2: mx + 5, y2: y + 5, class: 'clash-mark' }, svg);
+          svgEl('line', { x1: mx - 5, y1: y + 5, x2: mx + 5, y2: y - 5, class: 'clash-mark' }, svg);
+        }
+        drawSite(svg, lx, y, EDGE[forms][left][i]);
+        drawSite(svg, rx, y, EDGE[forms][right][i]);
+      });
+    } else {
+      svgEl('line', { x1: RAIL_R, y1: 193, x2: railR, y2: 193, class: 'mismatch' }, svg);
+      svgEl('line', { x1: RAIL_R, y1: 187, x2: RAIL_R, y2: 199, class: 'mismatch' }, svg);
+      svgEl('line', { x1: railR, y1: 187, x2: railR, y2: 199, class: 'mismatch' }, svg);
+    }
+    bench.out.innerHTML = verdict(left, right, res, forms);
+    svg.setAttribute('aria-label', bench.out.textContent);
+    bench.buttons.forEach(({ btn, side, base }) => btn.setAttribute('aria-pressed', String(state[side] === base)));
+  }
+
+  const matrixBody = document.querySelector('#matrix tbody');
+  const cells = [];
+  BASES.forEach(l => {
+    const tr = document.createElement('tr');
+    const th = document.createElement('th');
+    th.scope = 'row';
+    th.textContent = l;
+    tr.appendChild(th);
+    BASES.forEach(r => {
+      const td = document.createElement('td');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.addEventListener('click', () => { state.left = l; state.right = r; renderAll(); });
+      td.appendChild(btn);
+      tr.appendChild(td);
+      cells.push({ btn, l, r });
+    });
+    matrixBody.appendChild(tr);
+  });
+
+  function renderMatrix() {
+    cells.forEach(({ btn, l, r }) => {
+      const res = evaluate(l, r, state.forms);
+      const [text, kind] =
+        res.kind === 'fit' ? [`${res.bonds} bonds`, 'fit'] :
+        res.kind === 'clash' ? ['clash', 'bad'] :
+        res.kind === 'wide' ? ['too wide', 'size'] : ['too narrow', 'size'];
+      btn.textContent = text;
+      btn.className = 'cell ' + kind;
+      btn.setAttribute('aria-label', `${l} with ${r}: ${text}`);
+      btn.setAttribute('aria-pressed', String(l === state.left && r === state.right));
+    });
+  }
+
+  const formButtons = Array.from(document.querySelectorAll('.seg [data-forms]'));
+  formButtons.forEach(btn => btn.addEventListener('click', () => { state.forms = btn.dataset.forms; renderAll(); }));
+
+  function renderAll() {
+    benches.forEach(renderBench);
+    renderMatrix();
+    formButtons.forEach(btn => btn.setAttribute('aria-pressed', String(btn.dataset.forms === state.forms)));
+  }
+
+  // Who: a fixed A-T drawing split into parts, each attributed to the people who supplied it.
+  const whoSvg = document.getElementById('who-svg');
+  const whoDrawing = document.getElementById('who-drawing');
+  const whoCaption = document.getElementById('who-caption');
+  const part = name => svgEl('g', { 'data-part': name }, whoSvg);
+  const P = {
+    backbone: part('backbone'), direction: part('direction'), pair: part('pair'), bonds: part('bonds'),
+    hydrogens: part('hydrogens'), identity: part('identity'), width: part('width')
+  };
+  drawRail(P.backbone, RAIL_L, false);
+  drawRail(P.backbone, RAIL_R, false);
+  svgEl('polygon', { points: `${RAIL_L},2 ${RAIL_L - 7},15 ${RAIL_L + 7},15`, class: 'arrow' }, P.direction);
+  svgEl('polygon', { points: `${RAIL_R},198 ${RAIL_R - 7},185 ${RAIL_R + 7},185`, class: 'arrow' }, P.direction);
+  drawBase(P.pair, 'A', RAIL_L, 1, P.identity);
+  drawBase(P.pair, 'T', RAIL_R, -1, P.identity);
+  const atRes = evaluate('A', 'T', 'keto');
+  SITE_DY.forEach((dy, i) => {
+    const y = CY + dy, lx = RAIL_L + siteX(SHAPES.R.len, dy), rx = RAIL_R - siteX(SHAPES.Y.len, dy);
+    if (atRes.sites[i] === 'bond') svgEl('line', { x1: lx + 5, y1: y, x2: rx - 5, y2: y, class: 'hbond' }, P.bonds);
+    drawSite(P.hydrogens, lx, y, EDGE.keto.A[i]);
+    drawSite(P.hydrogens, rx, y, EDGE.keto.T[i]);
+  });
+  svgEl('line', { x1: RAIL_L, y1: 216, x2: RAIL_R, y2: 216, class: 'dim' }, P.width);
+  svgEl('line', { x1: RAIL_L, y1: 210, x2: RAIL_L, y2: 222, class: 'dim' }, P.width);
+  svgEl('line', { x1: RAIL_R, y1: 210, x2: RAIL_R, y2: 222, class: 'dim' }, P.width);
+  svgEl('text', { x: 200, y: 234, 'text-anchor': 'middle', class: 'dim-label' }, P.width).textContent = 'helix width, about 20 Å';
+
+  const PEOPLE = [
+    { name: 'James Watson', role: 'Biologist, 24, at the Cavendish Laboratory in Cambridge.', parts: ['pair'],
+      gave: 'The pair itself: one purine and one pyrimidine, found by moving cardboard shapes.' },
+    { name: 'Francis Crick', role: 'Physicist turned biologist, also at the Cavendish.', parts: ['direction'],
+      gave: 'The opposite running directions of the two strands, read from Franklin\'s crystallographic data.' },
+    { name: 'Jerry Donohue', role: 'American crystallographer sharing their office.', parts: ['hydrogens'],
+      gave: 'Where the hydrogens sit: the keto forms of G and T, not the textbook enol forms.' },
+    { name: 'Rosalind Franklin and Raymond Gosling', role: 'X-ray crystallographers at King\'s College London.', parts: ['backbone', 'width'],
+      gave: 'The backbone on the outside and the dimensions of the helix, from their X-ray photographs and measurements.' },
+    { name: 'Maurice Wilkins', role: 'Also at King\'s.', parts: ['backbone', 'width'],
+      gave: 'Passed the King\'s X-ray evidence to Watson, including Photo 51 in January 1953.' },
+    { name: 'Erwin Chargaff', role: 'Biochemist at Columbia.', parts: ['identity'],
+      gave: 'Which letters belong together: DNA holds as much A as T and as much G as C.' },
+    { name: 'J. M. Gulland and D. O. Jordan', role: 'Chemists at Nottingham.', parts: ['bonds'],
+      gave: 'That the bases are held to one another by hydrogen bonds at all, from titrations of DNA.' }
+  ];
+  const peopleList = document.getElementById('people');
+  let selected = null;
+  const personButtons = PEOPLE.map((p, i) => {
+    const li = document.createElement('li');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'person';
+    btn.setAttribute('aria-pressed', 'false');
+    btn.innerHTML = `<span class="name">${p.name}</span><span class="role">${p.role}</span>`;
+    btn.addEventListener('click', () => { selected = selected === i ? null : i; renderWho(); });
+    li.appendChild(btn);
+    peopleList.appendChild(li);
+    return btn;
+  });
+  function renderWho() {
+    const p = selected === null ? null : PEOPLE[selected];
+    whoDrawing.classList.toggle('has-selection', !!p);
+    Object.entries(P).forEach(([name, g]) => g.classList.toggle('on', !!p && p.parts.includes(name)));
+    personButtons.forEach((b, i) => b.setAttribute('aria-pressed', String(i === selected)));
+    whoCaption.textContent = p ? `${p.name}: ${p.gave}` : 'An A-T pair between the two backbones. Nothing selected.';
+  }
+
+  // Why
+  const ladder = document.getElementById('ladder');
+  const tally = document.getElementById('tally');
+  const coverBtn = document.getElementById('cover');
+  const rungs = INITIAL.map((_, i) => {
+    const rung = document.createElement('div');
+    rung.className = 'rung';
+    const top = document.createElement('button');
+    top.type = 'button';
+    top.addEventListener('click', () => {
+      state.seq[i] = BASES[(BASES.indexOf(state.seq[i]) + 1) % 4];
+      state.revealed.delete(i);
+      renderLadder();
+    });
+    const ticks = document.createElement('div');
+    ticks.className = 'ticks';
+    ticks.setAttribute('aria-hidden', 'true');
+    const bottom = document.createElement('button');
+    bottom.type = 'button';
+    bottom.addEventListener('click', () => {
+      state.revealed.add(i);
+      renderLadder();
+      const next = rungs.find((r, j) => j > i && !r.bottom.disabled);
+      if (next) next.bottom.focus();
+    });
+    rung.append(top, ticks, bottom);
+    ladder.appendChild(rung);
+    return { top, ticks, bottom };
+  });
+
+  function renderLadder() {
+    state.seq.forEach((b, i) => {
+      const { top, ticks, bottom } = rungs[i];
+      const p = PARTNER[b];
+      top.textContent = b;
+      top.className = 'tile top ' + cls(b);
+      top.setAttribute('aria-label', `Position ${i + 1}, ${NAMES[b]}. Tap to change.`);
+      ticks.innerHTML = '<i></i>'.repeat(b === 'G' || b === 'C' ? 3 : 2);
+      const hidden = state.covered && !state.revealed.has(i);
+      bottom.disabled = !hidden;
+      bottom.textContent = hidden ? '?' : p;
+      bottom.className = 'tile ' + (hidden ? 'hidden' : cls(p));
+      bottom.setAttribute('aria-label', hidden ? `Reveal the partner of position ${i + 1}` : `Partner ${i + 1}, ${NAMES[p]}`);
+    });
+    const c = { A: 0, T: 0, G: 0, C: 0 };
+    state.seq.forEach(b => { c[b]++; c[PARTNER[b]]++; });
+    const at = c.A + c.T, gc = c.G + c.C;
+    const ratio = gc === 0 ? 'there is no G or C at all' : `the ratio of A+T to G+C is ${(at / gc).toFixed(2)}`;
+    tally.innerHTML = `Across both strands: <b>A ${c.A}</b>, <b>T ${c.T}</b>, <b>G ${c.G}</b>, <b>C ${c.C}</b>. A equals T and G equals C every time, because each A sits opposite a T and each G opposite a C. Meanwhile ${ratio}, and nothing stops that number from changing.`;
+    coverBtn.setAttribute('aria-pressed', String(state.covered));
+    coverBtn.textContent = state.covered ? 'Uncover the partner strand' : 'Cover the partner strand';
+  }
+
+  document.getElementById('shuffle').addEventListener('click', () => {
+    state.seq = state.seq.map(() => BASES[Math.floor(Math.random() * 4)]);
+    state.revealed.clear();
+    renderLadder();
+  });
+  document.getElementById('reset').addEventListener('click', () => {
+    state.seq = INITIAL.slice();
+    state.covered = false;
+    state.revealed.clear();
+    renderLadder();
+  });
+  coverBtn.addEventListener('click', () => {
+    state.covered = !state.covered;
+    state.revealed.clear();
+    renderLadder();
+  });
+
+  // When
+  const scrollTo = el => el.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+  document.querySelectorAll('.set-bench').forEach(btn => btn.addEventListener('click', () => {
+    state.left = btn.dataset.left;
+    state.right = btn.dataset.right;
+    state.forms = btn.dataset.forms;
+    renderAll();
+    document.getElementById('how-bench').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+  }));
+  document.querySelectorAll('.ev').forEach(btn => btn.addEventListener('click', () => {
+    const li = document.getElementById(btn.dataset.target);
+    scrollTo(li);
+    li.classList.add('flash');
+    setTimeout(() => li.classList.remove('flash'), 1600);
+  }));
+
+  // Index: mark the section currently in the reading zone.
+  const links = new Map(Array.from(document.querySelectorAll('.index a')).map(a => [a.getAttribute('href').slice(1), a]));
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      links.forEach((a, id) => a.setAttribute('aria-current', String(id === e.target.id)));
+    });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  document.querySelectorAll('section[id]').forEach(s => observer.observe(s));
+
+  renderAll();
+  renderWho();
+  renderLadder();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1860 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta
+      name="description"
+      content="Tafel turns your desk into visual prompts for AI agents: draw on paper, give a thumbs up, and your agent builds what you sketched."
+    />
+    <style>
+      :root {
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      body {
+        margin: 0;
+      }
+      img,
+      video {
+        max-width: 100%;
+      }
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+    <title>Tafel</title>
+    <link rel="icon" href="assets/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Schibsted+Grotesk:wght@600;800&display=swap"
+    />
+    <style>
+      /* Layout: one quiet reading column, a paper-and-ink palette, sticky-note yellow as the only accent. */
+      :root {
+        --paper: #f5f5f1;
+        --surface: #ffffff;
+        --ink: #1b2130;
+        --muted: #5b6270;
+        --line: #d9d9d1;
+        --note: #f1df72;
+        --note-ink: #1b2130;
+        --wood: #b88552;
+        --note-pink: #f4b9c4;
+        --note-blue: #b2d7ef;
+        --player: #2f58c9;
+        --backdrop: rgba(19, 20, 23, 0.6);
+        --font-display:
+          "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+        --font-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+        --font-hand: "Caveat", "Bradley Hand", "Segoe Print", cursive;
+        --step--1: 0.875rem;
+        --step-0: 1.0625rem;
+        --step-1: 1.3rem;
+        --step-2: 1.75rem;
+        --step-3: clamp(2.2rem, 6vw, 3.6rem);
+        --radius: 10px;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --paper: #131417;
+          --surface: #1c1e23;
+          --ink: #ebe9e3;
+          --muted: #a3a7af;
+          --line: #2e3138;
+          --note: #e8d566;
+          --wood: #8a6440;
+          --note-pink: #e7a9b5;
+          --note-blue: #9cc4df;
+          --player: #86a6ff;
+          --backdrop: rgba(0, 0, 0, 0.72);
+          color-scheme: dark;
+        }
+      }
+      :root[data-theme="dark"] {
+        --paper: #131417;
+        --surface: #1c1e23;
+        --ink: #ebe9e3;
+        --muted: #a3a7af;
+        --line: #2e3138;
+        --note: #e8d566;
+        --wood: #8a6440;
+        --note-pink: #e7a9b5;
+        --note-blue: #9cc4df;
+        --player: #86a6ff;
+        --backdrop: rgba(0, 0, 0, 0.72);
+        color-scheme: dark;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: var(--step-0);
+        line-height: 1.6;
+      }
+      .page {
+        container-type: inline-size;
+      }
+      .wrap {
+        max-width: 1040px;
+        margin-inline: auto;
+        padding-inline: 20px;
+      }
+      a {
+        color: inherit;
+        text-underline-offset: 3px;
+      }
+      a:focus-visible,
+      button:focus-visible,
+      summary:focus-visible,
+      input:focus-visible,
+      canvas:focus-visible,
+      [tabindex]:focus-visible {
+        outline: 2px solid var(--ink);
+        outline-offset: 3px;
+        border-radius: 4px;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: var(--font-display);
+        line-height: 1.12;
+        text-wrap: balance;
+        margin: 0;
+      }
+      h2 {
+        font-size: var(--step-2);
+        font-weight: 800;
+      }
+      h3 {
+        font-size: var(--step-1);
+        font-weight: 600;
+      }
+      p {
+        margin: 0;
+      }
+      .lede {
+        color: var(--muted);
+        max-width: 60ch;
+      }
+      .hand {
+        font-family: var(--font-hand);
+        font-size: 1.45rem;
+        line-height: 1;
+        color: var(--muted);
+      }
+      mark {
+        background: var(--note);
+        color: var(--note-ink);
+        padding: 0 0.15em;
+        border-radius: 2px;
+      }
+
+      /* Header */
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        padding-block: 22px;
+      }
+      .wordmark {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-display);
+        font-weight: 800;
+        font-kerning: normal;
+        letter-spacing: 0.04em;
+        font-size: 1.05rem;
+        text-decoration: none;
+      }
+      .wordmark__symbol {
+        width: 34px;
+        height: 28px;
+        flex: none;
+      }
+      .top nav {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        font-size: var(--step--1);
+      }
+      .top nav a {
+        text-decoration: none;
+        color: var(--muted);
+      }
+      .top nav a:hover {
+        color: var(--ink);
+      }
+
+      section {
+        padding-block: 56px;
+        border-top: 1px solid var(--line);
+      }
+      .section-head {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 28px;
+      }
+      #examples .section-head {
+        margin-bottom: 44px;
+      }
+
+      /* Hero */
+      .hero {
+        border-top: 0;
+        padding-block: 36px 56px;
+        display: grid;
+        gap: 32px;
+      }
+      .hero h1 {
+        font-size: var(--step-3);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        max-width: 16ch;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+      }
+      .button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 18px;
+        border-radius: 999px;
+        border: 1px solid var(--ink);
+        font: 500 var(--step--1) / 1 var(--font-body);
+        text-decoration: none;
+        cursor: pointer;
+        background: transparent;
+        color: var(--ink);
+      }
+      .button--solid {
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .fine {
+        font-size: var(--step--1);
+        color: var(--muted);
+      }
+
+      .flow {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center;
+        gap: 14px;
+      }
+      .flow figure {
+        margin: 0;
+        display: grid;
+        gap: 8px;
+        min-width: 0;
+      }
+      .flow figcaption {
+        display: flex;
+        gap: 8px;
+        align-items: baseline;
+      }
+      .handoff {
+        display: grid;
+        justify-items: center;
+        gap: 6px;
+      }
+      .chip {
+        font: 500 0.78rem/1 var(--font-mono);
+        border: 1.5px solid var(--ink);
+        border-radius: 4px;
+        padding: 6px 8px;
+        white-space: nowrap;
+      }
+      .arrow {
+        font-size: 1.6rem;
+        line-height: 1;
+        color: var(--muted);
+      }
+
+      .window {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      .window__bar {
+        display: flex;
+        gap: 6px;
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--line);
+      }
+      .window__bar span {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--line);
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 34%;
+        gap: 10px;
+        padding: 10px;
+      }
+      .cam {
+        position: relative;
+        aspect-ratio: 4 / 3;
+        max-width: 100%;
+        border-radius: 6px;
+        overflow: hidden;
+        background: var(--wood);
+      }
+      .cam img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: 50% 22%;
+        display: block;
+      }
+      .cam__status {
+        position: absolute;
+        left: 8px;
+        top: 8px;
+        font: 500 0.68rem/1 var(--font-mono);
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        padding: 4px 6px;
+        border-radius: 4px;
+      }
+      .ring {
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        width: 54px;
+        height: 54px;
+      }
+      .ring circle {
+        fill: none;
+        stroke-width: 5;
+      }
+      .ring .track {
+        stroke: rgba(255, 255, 255, 0.45);
+      }
+      .ring .fill {
+        stroke: var(--note);
+        stroke-linecap: round;
+        stroke-dasharray: 138;
+        stroke-dashoffset: 0;
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+        animation: hold 2s ease-in-out 0.6s backwards;
+      }
+      .ring text {
+        font-size: 20px;
+        text-anchor: middle;
+        dominant-baseline: central;
+      }
+      @keyframes hold {
+        from {
+          stroke-dashoffset: 138;
+        }
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .ring .fill {
+          animation: none;
+        }
+      }
+      .panel {
+        display: grid;
+        gap: 7px;
+        align-content: start;
+        font: 0.7rem/1.3 var(--font-mono);
+        color: var(--muted);
+      }
+      .panel strong {
+        color: var(--ink);
+        font-weight: 500;
+      }
+      .thumbs {
+        grid-column: 1 / -1;
+        display: flex;
+        gap: 8px;
+      }
+      .thumbs img {
+        width: 56px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 4px;
+        border: 1px solid var(--line);
+      }
+      .thumbs .t1 {
+        object-position: 50% 25%;
+      }
+      .thumbs .t2 {
+        object-position: 50% 70%;
+      }
+
+      .chat {
+        display: grid;
+        grid-template-columns: 22% minmax(0, 1fr);
+        min-height: 100%;
+      }
+      .chat__side {
+        border-right: 1px solid var(--line);
+        padding: 12px 10px;
+        display: grid;
+        gap: 8px;
+        align-content: start;
+      }
+      .chat__side i {
+        display: block;
+        height: 6px;
+        border-radius: 3px;
+        background: var(--line);
+      }
+      .chat__main {
+        padding: 12px;
+        display: grid;
+        gap: 10px;
+        align-content: start;
+        min-width: 0;
+      }
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px;
+        display: grid;
+        gap: 6px;
+        font: 0.7rem/1.3 var(--font-mono);
+        color: var(--muted);
+      }
+      .card img {
+        width: 64px;
+        height: 44px;
+        object-fit: cover;
+        object-position: 50% 22%;
+        border-radius: 4px;
+      }
+      .card .row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--note);
+        flex: none;
+      }
+      .reply {
+        font-size: 0.78rem;
+        line-height: 1.4;
+      }
+
+      /* Miniature of this page, used as a result */
+      .mini {
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 10px;
+        display: grid;
+        gap: 6px;
+        background: var(--paper);
+      }
+      .mini b {
+        display: block;
+        font: 800 0.7rem/1 var(--font-display);
+        letter-spacing: 0.16em;
+      }
+      .mini i {
+        display: block;
+        height: 5px;
+        border-radius: 3px;
+        background: var(--line);
+      }
+      .mini .h {
+        height: 9px;
+        width: 70%;
+        background: var(--ink);
+        opacity: 0.85;
+      }
+      .mini .cols {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+      .mini .box {
+        height: 30px;
+        border: 1px solid var(--line);
+        border-radius: 3px;
+      }
+      .mini .note {
+        width: 40%;
+        height: 7px;
+        background: var(--note);
+      }
+
+      /* Examples: only the desk view / working result pair breaks out of the reading column, up to 1280px */
+      .breakout {
+        --bw: min(1280px, 100cqw - 40px);
+        width: var(--bw);
+        margin-inline: calc((100% - var(--bw)) / 2);
+      }
+      .tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+      .tab {
+        font: 500 var(--step--1) / 1 var(--font-body);
+        padding: 9px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+      }
+      .tab[aria-selected="true"] {
+        border-color: var(--ink);
+        color: var(--ink);
+        background: var(--surface);
+      }
+      .example {
+        display: grid;
+        gap: 18px;
+      }
+      .example__text {
+        display: grid;
+        gap: 6px;
+        max-width: 65ch;
+      }
+      .pair {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+      .pair figure {
+        margin: 0;
+        display: grid;
+        grid-template-rows: auto auto;
+        gap: 8px;
+        min-width: 0;
+        align-content: start;
+      }
+      .pair figure:has(.frame--todo) {
+        grid-template-rows: minmax(0, 1fr) auto;
+        align-content: stretch;
+      }
+      .pair .frame--todo {
+        align-self: stretch;
+      }
+      .pair figcaption {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        min-height: 30px;
+      }
+      .enlarge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font: 500 0.78rem/1 var(--font-body);
+        padding: 7px 11px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--ink);
+        cursor: pointer;
+      }
+      .enlarge:hover {
+        border-color: var(--ink);
+      }
+      .enlarge svg {
+        width: 13px;
+        height: 13px;
+      }
+      .frame {
+        aspect-ratio: 4 / 3;
+        max-width: 100%;
+        border-radius: var(--radius);
+        overflow: hidden;
+        border: 1px solid var(--line);
+        background: var(--surface);
+      }
+      .frame--desk {
+        background: var(--wood);
+      }
+      .frame--page,
+      .frame--video {
+        background: var(--surface);
+      }
+      .frame--page iframe {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+      .frame--video {
+        display: grid;
+        place-items: center;
+        background: #fff;
+      }
+      /* The box keeps the recording's own aspect ratio, so the Spotify link sits exactly on the card. */
+      .video-box {
+        position: relative;
+        height: 100%;
+        max-width: 100%;
+        aspect-ratio: 960 / 792;
+      }
+      .video-box video {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .video-box__spotify {
+        position: absolute;
+        top: 2.5%;
+        left: 4.2%;
+        width: 93%;
+        height: 32.5%;
+        border-radius: 12px;
+        cursor: pointer;
+      }
+      .video-box__spotify:hover {
+        box-shadow: 0 0 0 2px var(--ink);
+      }
+      .video-box__spotify:focus-visible {
+        outline: 3px solid var(--ink);
+        outline-offset: 2px;
+      }
+      .frame--desk img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+      .frame--embed {
+        display: grid;
+        place-items: center;
+        padding: 18px;
+      }
+      .frame--embed .mini {
+        width: min(320px, 100%);
+      }
+      .frame--todo {
+        display: grid;
+        place-content: center;
+        gap: 8px;
+        text-align: center;
+        padding: 20px;
+        border-style: dashed;
+        background: transparent;
+        color: var(--muted);
+        font-size: var(--step--1);
+      }
+      .frame--todo strong {
+        color: var(--ink);
+        font-weight: 500;
+      }
+      @media (max-width: 760px) {
+        .frame--todo {
+          aspect-ratio: auto;
+          min-height: 180px;
+        }
+      }
+      .frame--todo p {
+        max-width: 42ch;
+        margin-inline: auto;
+      }
+      .frame--demo {
+        aspect-ratio: auto;
+        overflow: visible;
+        padding: 12px;
+        container-type: inline-size;
+      }
+      .button--sm {
+        padding: 8px 13px;
+      }
+      .stage {
+        position: relative;
+        aspect-ratio: 4 / 3;
+        max-width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--surface);
+      }
+      .stage canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin-top: 10px;
+      }
+      .status {
+        font: 500 0.78rem/1.3 var(--font-mono);
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Demo: storyboard animation */
+      .anim input[type="range"] {
+        flex: 1 1 140px;
+        min-width: 0;
+        accent-color: var(--ink);
+      }
+      .frames {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .frames button {
+        font: 500 0.78rem/1 var(--font-body);
+        padding: 7px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--ink);
+        cursor: pointer;
+      }
+      .frames button[aria-pressed="true"] {
+        background: var(--note);
+        color: var(--note-ink);
+        border-color: var(--note-ink);
+      }
+
+      /* Enlarge dialog */
+      .viewer {
+        width: min(1200px, calc(100vw - 32px));
+        max-width: none;
+        max-height: calc(100dvh - 32px);
+        padding: 0;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--paper);
+        color: var(--ink);
+      }
+      .viewer::backdrop {
+        background: var(--backdrop, rgba(19, 20, 23, 0.6));
+      }
+      .viewer__head {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--line);
+        background: var(--paper);
+      }
+      .viewer__head h2 {
+        font-size: var(--step-1);
+        font-weight: 600;
+      }
+      .viewer__body {
+        padding: 16px;
+      }
+      .viewer .frame {
+        width: min(100%, calc((100dvh - 120px) * 4 / 3));
+        margin-inline: auto;
+      }
+      .viewer .frame--demo {
+        width: min(100%, calc((100dvh - 260px) * 4 / 3), 1000px);
+      }
+      .viewer .frame--page {
+        width: min(100%, 1200px);
+        aspect-ratio: auto;
+        height: calc(100dvh - 120px);
+      }
+      .viewer .frame--embed .mini {
+        width: min(560px, 100%);
+        gap: 12px;
+        padding: 20px;
+      }
+      body:has(.viewer[open]) {
+        overflow: hidden;
+      }
+      .tag {
+        font: 500 0.72rem/1 var(--font-mono);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      /* Features + use */
+      .two {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 40px;
+      }
+      .list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 22px;
+      }
+      .list li {
+        display: grid;
+        gap: 4px;
+        min-width: 0;
+      }
+      .list p {
+        color: var(--muted);
+      }
+      .gestures {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 4px 12px;
+        margin-top: 8px;
+        font-size: var(--step--1);
+        color: var(--muted);
+      }
+      .gestures dt {
+        font-size: 1.1rem;
+        line-height: 1.4;
+      }
+      .gestures dd {
+        margin: 0;
+      }
+
+      /* Install */
+      .steps {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 26px;
+        counter-reset: step;
+      }
+      .steps > li {
+        display: grid;
+        grid-template-columns: 2.2rem minmax(0, 1fr);
+        gap: 4px 14px;
+        counter-increment: step;
+      }
+      .steps > li::before {
+        content: counter(step);
+        grid-row: span 3;
+        width: 2rem;
+        height: 2rem;
+        border: 1.5px solid var(--ink);
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font: 600 0.95rem/1 var(--font-display);
+      }
+      .steps p {
+        color: var(--muted);
+        max-width: 65ch;
+      }
+      .code {
+        position: relative;
+        margin-top: 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        overflow-x: auto;
+      }
+      .code pre {
+        margin: 0;
+        padding: 14px 16px;
+        font: 0.82rem/1.55 var(--font-mono);
+      }
+      .copy {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        font: 500 0.75rem/1 var(--font-body);
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        background: var(--paper);
+        color: var(--ink);
+        cursor: pointer;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.9em;
+      }
+
+      /* FAQ */
+      .faq {
+        display: grid;
+      }
+      .faq details {
+        border-bottom: 1px solid var(--line);
+        padding-block: 14px;
+      }
+      .faq details:first-child {
+        border-top: 1px solid var(--line);
+      }
+      .faq summary {
+        cursor: pointer;
+        font-weight: 500;
+        list-style: none;
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+      }
+      .faq summary::-webkit-details-marker {
+        display: none;
+      }
+      .faq summary::before {
+        content: "";
+        flex: none;
+        width: 0.45em;
+        height: 0.45em;
+        border-right: 2px solid currentColor;
+        border-bottom: 2px solid currentColor;
+        transform: translateY(-0.12em) rotate(-45deg);
+        transition: transform 0.18s ease;
+      }
+      .faq details[open] summary::before {
+        transform: translateY(-0.25em) rotate(45deg);
+      }
+      .faq details p {
+        color: var(--muted);
+        margin-top: 8px;
+        margin-left: calc(0.45em + 12px);
+        max-width: 65ch;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .faq summary::before {
+          transition: none;
+        }
+      }
+
+      footer {
+        border-top: 1px solid var(--line);
+        padding-block: 28px 40px;
+      }
+
+      @media (max-width: 760px) {
+        .flow {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .arrow {
+          transform: rotate(90deg);
+        }
+        .pair,
+        .two {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .two {
+          gap: 48px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="wrap">
+        <header class="top">
+          <a class="wordmark" href="#top" id="top">
+            <svg
+              class="wordmark__symbol"
+              viewBox="14 22 72 56"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path
+                d="M21 71V29H79V71H55M45 39L29 53L45 67"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            TAFEL
+          </a>
+          <nav aria-label="Sections">
+            <a href="#examples">Examples</a>
+            <a href="#features">Features</a>
+            <a href="#install">Install</a>
+            <a href="#faq">FAQ</a>
+          </nav>
+        </header>
+
+        <main>
+          <section class="hero" aria-labelledby="hero-title">
+            <div class="section-head">
+              <h1 id="hero-title">
+                Bring your ideas to life with <mark>visual prompts</mark>
+              </h1>
+              <p class="lede">
+                Draw on paper, arrange sticky notes, hold up a book. Tafel
+                watches your desk with any camera, and a thumbs up sends what it
+                sees to your AI agent as a prompt. The agent reads your
+                handwriting and your layout together and builds what you
+                sketched.
+              </p>
+            </div>
+
+            <div class="flow" aria-label="From desk to result">
+              <figure>
+                <figcaption>
+                  <span class="hand">app ↘</span
+                  ><span class="fine">Tafel on your Mac</span>
+                </figcaption>
+                <div class="window" aria-hidden="true">
+                  <div class="window__bar">
+                    <span></span><span></span><span></span>
+                  </div>
+                  <div class="app">
+                    <div class="cam">
+                      <img src="examples/desk-landing-page.jpg" alt="" />
+                      <span class="cam__status">Desk · watching</span>
+                      <svg class="ring" viewBox="0 0 54 54">
+                        <circle class="track" cx="27" cy="27" r="22"></circle>
+                        <circle class="fill" cx="27" cy="27" r="22"></circle>
+                        <text x="27" y="28">👍</text>
+                      </svg>
+                    </div>
+                    <div class="panel">
+                      <strong>Gestures</strong>
+                      <span>👍 send snapshot</span>
+                      <span>🙌 all cameras</span>
+                      <span>👌 collection</span>
+                      <span>✊ pause</span>
+                      <span>✋ resume</span>
+                      <strong>Agent</strong>
+                      <span>Waiting for your prompt</span>
+                    </div>
+                    <div class="thumbs">
+                      <img
+                        class="t1"
+                        src="examples/desk-landing-page.jpg"
+                        alt=""
+                      />
+                      <img
+                        class="t2"
+                        src="examples/desk-landing-page.jpg"
+                        alt=""
+                      />
+                    </div>
+                  </div>
+                </div>
+              </figure>
+
+              <div class="handoff">
+                <span class="chip">visual prompt</span>
+                <span class="arrow" aria-hidden="true">→</span>
+              </div>
+
+              <figure>
+                <figcaption>
+                  <span class="hand">result ↓</span
+                  ><span class="fine">in your agent's chat</span>
+                </figcaption>
+                <div class="window" aria-hidden="true">
+                  <div class="window__bar">
+                    <span></span><span></span><span></span>
+                  </div>
+                  <div class="chat">
+                    <div class="chat__side">
+                      <i></i><i></i><i style="width: 70%"></i><i></i
+                      ><i style="width: 55%"></i>
+                    </div>
+                    <div class="chat__main">
+                      <div class="card">
+                        <div class="row">
+                          <span class="dot"></span>Snapshot #17 · Delivered to
+                          agent
+                        </div>
+                        <img src="examples/desk-landing-page.jpg" alt="" />
+                      </div>
+                      <p class="reply">
+                        Turning your layout into a landing page: hero, five
+                        examples, features, install and FAQ.
+                      </p>
+                      <div class="mini">
+                        <b>TAFEL</b><i class="h"></i><i style="width: 85%"></i>
+                        <div class="cols">
+                          <span class="box"></span><span class="box"></span>
+                        </div>
+                        <i class="note"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </figure>
+            </div>
+
+            <div class="actions">
+              <a
+                class="button button--solid"
+                href="https://github.com/StevenOtto/Tafel/releases/latest/download/Tafel.dmg"
+                >Download for macOS</a
+              >
+              <a class="button" href="#examples">See examples</a>
+              <span class="fine">macOS 12 or later · Apple silicon</span>
+            </div>
+          </section>
+
+          <section id="examples" aria-labelledby="examples-title">
+            <div class="section-head">
+              <h2 id="examples-title">From desk to working result</h2>
+              <p class="lede">
+                Each example shows what was on the desk next to what the agent
+                built from it. Play the game, try the explanation or enlarge
+                either side. The storyboard is a demo of what a set of sheets
+                can turn into.
+              </p>
+            </div>
+            <div
+              class="tabs"
+              role="tablist"
+              aria-label="Examples"
+              id="tabs"
+            ></div>
+            <div
+              id="example"
+              role="tabpanel"
+              class="example"
+              tabindex="0"
+            ></div>
+          </section>
+
+          <section id="features" aria-labelledby="features-title">
+            <h2 id="features-title" class="section-head">What you get</h2>
+            <div class="two">
+              <div>
+                <p class="tag" style="margin-bottom: 18px">Features</p>
+                <ul class="list">
+                  <li>
+                    <h3>Connect any camera</h3>
+                    <p>
+                      Your Mac's camera, a USB webcam, an iPhone through
+                      Continuity Camera, or an Android phone or IP camera on
+                      your local network.
+                    </p>
+                  </li>
+                  <li>
+                    <h3>Works with most AI agents</h3>
+                    <p>
+                      Tafel runs a local MCP server, so any MCP-capable agent
+                      can use it. In hosts that support MCP Apps, your snapshots
+                      appear as a card right in the conversation.
+                    </p>
+                  </li>
+                  <li>
+                    <h3>Use gestures and put your laptop away</h3>
+                    <p>
+                      Hold a gesture for two seconds. A ring fills while you
+                      hold, and letting go cancels.
+                    </p>
+                    <dl class="gestures">
+                      <dt>👍</dt>
+                      <dd>Send a snapshot of this camera</dd>
+                      <dt>🙌</dt>
+                      <dd>Send every watching camera at once</dd>
+                      <dt>👌</dt>
+                      <dd>Start a collection, then finish and send it</dd>
+                      <dt>✊</dt>
+                      <dd>
+                        Pause this camera (opt-in: off by default, because a pen
+                        grip can look like a fist)
+                      </dd>
+                      <dt>✋</dt>
+                      <dd>Resume a paused camera</dd>
+                    </dl>
+                  </li>
+                  <li>
+                    <h3>Integrate physical objects</h3>
+                    <p>
+                      The agent sees the whole desk: a book open on the right
+                      page, a prototype, a stack of sticky notes in priority
+                      order. Objects become part of the prompt.
+                    </p>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <p class="tag" style="margin-bottom: 18px">Use</p>
+                <ul class="list">
+                  <li>
+                    <h3>Multiple cameras at once</h3>
+                    <p>
+                      Point one camera at the desk and one at the whiteboard.
+                      Two thumbs up sends both views as a single prompt.
+                    </p>
+                  </li>
+                  <li>
+                    <h3>Multiplayer by default</h3>
+                    <p>
+                      Everyone at the table can draw on the same sheet and give
+                      the thumbs up. Co-author a visual prompt without passing a
+                      laptop around.
+                    </p>
+                  </li>
+                  <li>
+                    <h3>Several sheets, one prompt</h3>
+                    <p>
+                      Make an ok sign, show page after page, and make it again
+                      to send them together. Good for a multi-screen flow or a
+                      storyboard.
+                    </p>
+                  </li>
+                  <li>
+                    <h3>Sessions that keep your work</h3>
+                    <p>
+                      Snapshots are grouped in named sessions on your Mac and
+                      survive a restart. Your agent can look back at earlier
+                      sketches in the same session.
+                    </p>
+                  </li>
+                  <li>
+                    <h3>Private by design</h3>
+                    <p>
+                      Hand detection runs on your Mac. The MCP server only
+                      listens on your own machine, and Tafel needs no account or
+                      API key. Pause a camera and the agent stops seeing it.
+                    </p>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section id="install" aria-labelledby="install-title">
+            <div class="section-head">
+              <h2 id="install-title">Install</h2>
+              <p class="lede">Four steps, the last one optional.</p>
+            </div>
+            <ol class="steps">
+              <li>
+                <h3>Download the app</h3>
+                <p>
+                  Open the disk image and drag Tafel to Applications. Allow
+                  camera access when macOS asks.
+                </p>
+                <p class="fine">macOS 12 or later, Apple silicon.</p>
+              </li>
+              <li>
+                <h3>Connect your agent</h3>
+                <p>
+                  Add Tafel as an MCP server. In the Claude desktop app, choose
+                  Settings → Developer → Edit Config, paste this, and restart.
+                  Other MCP hosts can connect to
+                  <code>http://127.0.0.1:41625/mcp</code> directly.
+                </p>
+                <div class="code">
+                  <button class="copy" type="button" id="copy-config">
+                    Copy
+                  </button>
+                  <pre id="config">
+{
+  "mcpServers": {
+    "tafel": {
+      "command": "npx",
+      "args": ["mcp-remote", "http://127.0.0.1:41625/mcp", "--allow-http"]
+    }
+  }
+}</pre>
+                </div>
+              </li>
+              <li>
+                <h3>Start prompting</h3>
+                <p>
+                  Tell your agent "I'll sketch it", or pick
+                  <strong>Start visual prompting</strong> from its prompt menu.
+                  Draw, then hold a thumbs up. The agent receives the snapshot
+                  and gets to work.
+                </p>
+              </li>
+              <li>
+                <h3>
+                  Add a camera over your network
+                  <span class="fine">(optional)</span>
+                </h3>
+                <p>
+                  Run an IP camera app on a phone or tablet and paste its stream
+                  URL under Developer → Network camera. Tafel only accepts
+                  addresses on your local network.
+                </p>
+              </li>
+            </ol>
+          </section>
+
+          <section id="faq" aria-labelledby="faq-title">
+            <h2 id="faq-title" class="section-head">Questions</h2>
+            <div class="faq">
+              <details>
+                <summary>Which agents work with Tafel?</summary>
+                <p>
+                  Any agent that can use an MCP server over HTTP. The Claude
+                  desktop app connects through <code>mcp-remote</code> as shown
+                  above. Hosts that support MCP Apps also show your snapshots as
+                  an inline card with their delivery status.
+                </p>
+              </details>
+              <details>
+                <summary>Where do my images go?</summary>
+                <p>
+                  Snapshots are stored on your Mac, in sessions, until you
+                  delete them. What you send goes to your agent, and through it
+                  to the model provider that agent uses. Tafel itself uploads
+                  nothing.
+                </p>
+              </details>
+              <details>
+                <summary>Can the agent see my desk all the time?</summary>
+                <p>
+                  While a camera is watching, a connected agent can take a look
+                  at the desk, and Tafel shows you each time it does. Pause the
+                  camera and it stops.
+                </p>
+              </details>
+              <details>
+                <summary>What if a gesture fires while I'm writing?</summary>
+                <p>
+                  Every gesture has to be held for two seconds, and letting go
+                  cancels it. You can switch off individual gestures, or gesture
+                  recognition altogether, and use the buttons in the app
+                  instead. The fist gesture is off by default because a pen grip
+                  can look like one.
+                </p>
+              </details>
+              <details>
+                <summary>Does Tafel run on Windows or Linux?</summary>
+                <p>
+                  Not yet. Tafel runs on macOS 12 or later for now. Windows and
+                  Linux support will come later.
+                </p>
+              </details>
+              <details>
+                <summary>Do I need a special camera?</summary>
+                <p>
+                  No. The built-in camera works, though a camera looking down at
+                  the desk works best. An iPhone on a desk stand through
+                  Continuity Camera is a good setup. Up to four cameras run
+                  smoothly.
+                </p>
+              </details>
+              <details>
+                <summary>
+                  Does it need an internet connection or an API key?
+                </summary>
+                <p>
+                  Tafel itself does not. It never reaches the public internet.
+                  Your agent needs whatever connection it normally uses.
+                </p>
+              </details>
+            </div>
+          </section>
+        </main>
+
+        <footer>
+          <p class="fine">
+            Tafel turns your desk into input for AI agents. This page was built
+            from a sketch sent with Tafel, shown as example 5.
+          </p>
+        </footer>
+      </div>
+    </div>
+
+    <dialog class="viewer" id="viewer" aria-labelledby="viewer-title">
+      <div class="viewer__head">
+        <h2 id="viewer-title">Example</h2>
+        <button class="button button--sm" type="button" id="viewer-close">
+          Close
+        </button>
+      </div>
+      <div class="viewer__body" id="viewer-body"></div>
+    </dialog>
+
+    <script>
+      (() => {
+        const SKETCH = "examples/desk-landing-page.jpg";
+        const reducedMotion = () =>
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const token = (el, name) =>
+          getComputedStyle(el).getPropertyValue(name).trim();
+        const lifecycle = () => {
+          const controller = new AbortController();
+          return {
+            on: (el, type, fn, options = {}) =>
+              el.addEventListener(type, fn, {
+                ...options,
+                signal: controller.signal,
+              }),
+            abort: () => controller.abort(),
+          };
+        };
+        const setupCanvas = (canvas, width, height) => {
+          const scale = 2;
+          canvas.width = width * scale;
+          canvas.height = height * scale;
+          const ctx = canvas.getContext("2d");
+          ctx.setTransform(scale, 0, 0, scale, 0, 0);
+          return ctx;
+        };
+
+        /* ---------- Demo 4: storyboard animation ---------- */
+        const animHtml = `
+      <div class="frame frame--demo anim">
+        <div class="stage"><canvas role="img" aria-label="Paper plane animation" data-canvas></canvas></div>
+        <div class="bar">
+          <button class="button button--solid button--sm" type="button" data-toggle>Play</button>
+          <label class="status" for="anim-scrub">Position</label>
+          <input id="anim-scrub" type="range" min="0" max="1000" value="0" data-scrub>
+        </div>
+        <div class="frames" role="group" aria-label="Storyboard frames" data-frames></div>
+      </div>`;
+
+        const mountAnim = (root) => {
+          const life = lifecycle();
+          const W = 480,
+            H = 360,
+            DURATION = 5,
+            HOLD = 0.8;
+          const canvas = root.querySelector("[data-canvas]");
+          const ctx = setupCanvas(canvas, W, H);
+          const toggle = root.querySelector("[data-toggle]");
+          const scrub = root.querySelector("[data-scrub]");
+          const framesBox = root.querySelector("[data-frames]");
+          const frames = [
+            { name: "On the desk", from: 0, at: 0.06 },
+            { name: "Lift off", from: 0.15, at: 0.32 },
+            { name: "Loop", from: 0.45, at: 0.6 },
+            { name: "Into the mug", from: 0.75, at: 1 },
+          ];
+          framesBox.innerHTML = frames
+            .map(
+              (f, i) =>
+                `<button type="button" data-frame="${i}" aria-pressed="false">${i + 1} · ${f.name}</button>`,
+            )
+            .join("");
+          let t = 0,
+            clock = 0,
+            playing = false,
+            raf = 0,
+            last = 0,
+            stepTimer = 0;
+
+          const cubic = (a, b, c, d, u) => {
+            const v = 1 - u;
+            return (
+              v * v * v * a +
+              3 * v * v * u * b +
+              3 * v * u * u * c +
+              u * u * u * d
+            );
+          };
+          const point = (time) => {
+            const s = Math.max(0, Math.min(1, time));
+            if (s < 0.15) {
+              const u = s / 0.15;
+              return [60 + 30 * u, 300];
+            }
+            if (s < 0.45) {
+              const u = (s - 0.15) / 0.3;
+              return [
+                cubic(90, 170, 180, 240, u),
+                cubic(300, 300, 155, 155, u),
+              ];
+            }
+            if (s < 0.75) {
+              const a = Math.PI / 2 - 2 * Math.PI * ((s - 0.45) / 0.3);
+              return [240 + 45 * Math.cos(a), 110 + 45 * Math.sin(a)];
+            }
+            const u = (s - 0.75) / 0.25;
+            return [cubic(240, 300, 380, 405, u), cubic(155, 155, 200, 268, u)];
+          };
+          const frameIndex = (time) =>
+            time < 0.15 ? 0 : time < 0.45 ? 1 : time < 0.75 ? 2 : 3;
+
+          const draw = () => {
+            const c = {
+              surface: token(root, "--surface"),
+              ink: token(root, "--ink"),
+              muted: token(root, "--muted"),
+              wood: token(root, "--wood"),
+              note: token(root, "--note"),
+              line: token(root, "--line"),
+            };
+            ctx.fillStyle = c.surface;
+            ctx.fillRect(0, 0, W, H);
+            ctx.fillStyle = c.wood;
+            ctx.fillRect(0, 306, W, H - 306);
+            ctx.strokeStyle = c.ink;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, 306);
+            ctx.lineTo(W, 306);
+            ctx.stroke();
+            ctx.setLineDash([4, 6]);
+            ctx.strokeStyle = c.muted;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            for (let i = 0; i <= 80; i += 1) {
+              const [x, y] = point((t * i) / 80);
+              if (i === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+            const [x, y] = point(t);
+            const [nx, ny] = point(t < 0.999 ? t + 0.002 : t);
+            const [px, py] = point(t > 0.001 ? t - 0.002 : t);
+            const angle = Math.atan2(ny - py, nx - px);
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            ctx.strokeStyle = c.ink;
+            ctx.lineWidth = 1.8;
+            ctx.fillStyle = c.surface;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(-34, -11);
+            ctx.lineTo(-26, 0);
+            ctx.lineTo(-34, 7);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(-26, 0);
+            ctx.stroke();
+            ctx.restore();
+            ctx.fillStyle = c.note;
+            ctx.strokeStyle = c.ink;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(384, 262);
+            ctx.lineTo(388, 306);
+            ctx.lineTo(426, 306);
+            ctx.lineTo(430, 262);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(436, 284, 10, -Math.PI / 2, Math.PI / 2);
+            ctx.stroke();
+            const index = frameIndex(t);
+            ctx.fillStyle = c.ink;
+            ctx.font = '600 26px "Caveat", cursive';
+            ctx.fillText(
+              `${index + 1} · ${frames[index].name.toLowerCase()}`,
+              18,
+              36,
+            );
+            ctx.fillStyle = c.muted;
+            ctx.font = '500 11px "IBM Plex Mono", monospace';
+            ctx.fillText(`frame ${index + 1}/4`, 18, 56);
+          };
+
+          const sync = () => {
+            scrub.value = String(Math.round(t * 1000));
+            scrub.setAttribute(
+              "aria-valuetext",
+              `Frame ${frameIndex(t) + 1} of 4, ${frames[frameIndex(t)].name}`,
+            );
+            framesBox
+              .querySelectorAll("button")
+              .forEach((b, i) =>
+                b.setAttribute("aria-pressed", String(i === frameIndex(t))),
+              );
+            draw();
+          };
+          const tick = (now) => {
+            const dt = Math.min(0.05, (now - last) / 1000);
+            last = now;
+            if (reducedMotion()) {
+              stepTimer += dt;
+              if (stepTimer > 1.2) {
+                stepTimer = 0;
+                t = frames[(frameIndex(t) + 1) % frames.length].at;
+              }
+            } else {
+              clock += dt;
+              if (clock > DURATION + HOLD) clock = 0;
+              t = Math.min(1, clock / DURATION);
+            }
+            sync();
+            if (playing) raf = requestAnimationFrame(tick);
+          };
+          const play = () => {
+            if (t >= 1) {
+              t = 0;
+            }
+            clock = t * DURATION;
+            stepTimer = 0;
+            playing = true;
+            toggle.textContent = "Pause";
+            last = performance.now();
+            cancelAnimationFrame(raf);
+            raf = requestAnimationFrame(tick);
+          };
+          const pause = () => {
+            playing = false;
+            cancelAnimationFrame(raf);
+            toggle.textContent = "Play";
+          };
+          const seek = (value) => {
+            pause();
+            t = value;
+            sync();
+          };
+          life.on(toggle, "click", () => (playing ? pause() : play()));
+          life.on(scrub, "input", () => seek(Number(scrub.value) / 1000));
+          life.on(framesBox, "click", (event) => {
+            const button = event.target.closest("[data-frame]");
+            if (button) seek(frames[Number(button.dataset.frame)].at);
+          });
+          life.on(document, "visibilitychange", () => {
+            if (document.hidden) pause();
+          });
+          sync();
+          document.fonts?.ready.then(() => {
+            if (!playing) draw();
+          });
+          return {
+            pause,
+            redraw: draw,
+            destroy: () => {
+              pause();
+              life.abort();
+            },
+          };
+        };
+
+        /* ---------- Examples ---------- */
+        const SPOTIFY_URL =
+          "https://open.spotify.com/track/0Puj4YlTm6xNzDDADXHMI9";
+        const videoHtml = `<div class="frame frame--video"><div class="video-box"><video src="examples/sabotage.mp4" autoplay muted loop playsinline aria-label="Animation of a car with a siren chasing a running stick figure over a hill, past a row of buildings"></video><a class="video-box__spotify" href="${SPOTIFY_URL}" target="_blank" rel="noopener" aria-label="Play Sabotage by the Beastie Boys on Spotify"></a></div></div>`;
+        const mountVideo = (root) => {
+          const video = root.querySelector("video");
+          const play = () => {
+            if (!reducedMotion()) video.play().catch(() => {});
+          };
+          if (reducedMotion()) {
+            video.removeAttribute("autoplay");
+            video.controls = true;
+          }
+          video.addEventListener(
+            "error",
+            () => {
+              root.className = "frame frame--todo";
+              root.innerHTML =
+                "<p><strong>Screen recording to add</strong></p><p>The animation the agent made, recorded from its chat.</p>";
+            },
+            { once: true },
+          );
+          return {
+            pause: () => video.pause(),
+            redraw: play,
+            destroy: () => video.pause(),
+          };
+        };
+        const examples = [
+          {
+            label: "1 · Music video",
+            name: "Music video",
+            title: "An album sleeve and a doodle become a music video",
+            text: 'The Beastie Boys’ Ill Communication sleeve sits on the desk with a sticky note: play track 6 of this album. Next to it, a card with a car chasing a running figure over a hill, and a note asking for a visual to watch with the song. The agent found “Sabotage” and animated the chase. <a href="https://open.spotify.com/track/0Puj4YlTm6xNzDDADXHMI9" target="_blank" rel="noopener">Play “Sabotage” on Spotify</a> and watch along, or click the Spotify card in the video.',
+            desk: `<div class="frame frame--desk"><img src="examples/desk-sabotage.jpg" alt="Beastie Boys Ill Communication album sleeve with a sticky note saying play track 6 of this album, next to a sketched card of a car chasing a running figure over a hill" loading="lazy"></div>`,
+            result: videoHtml,
+            mount: mountVideo,
+            caption: "Recorded from the agent's chat.",
+          },
+          {
+            label: "2 · Game",
+            name: "Game",
+            title: "A one-page game design becomes a playable game",
+            text: "One sheet holds the whole design: four seasons as levels with their land and water paths, three enemies on a strength triangle, and three weapons. A sticky note asks to turn it into a playable game. This is the game the agent built.",
+            desk: `<div class="frame frame--desk"><img src="examples/desk-tower-defence.jpg" alt="A sheet titled Forest Tower Defence with four level maps for spring, summer, autumn and winter, an enemy triangle and three weapons, with a sticky note asking for a playable game" loading="lazy"></div>`,
+            result: `<div class="frame frame--page"><iframe src="examples/forest-tower-defence.html" title="Forest Tower Defence, the playable game" loading="lazy"></iframe></div>`,
+            caption: "Playable. Pick a season to start.",
+          },
+          {
+            label: "3 · Explorable",
+            name: "Explorable explanation",
+            title: "A book page becomes an explorable explanation",
+            text: "A book lies open at a drawing of the double helix, with a sticky note: explain this concept as an explorable explanation. A second sheet lists who, why, when, how and what, numbered in the order to tell them. The agent wrote the explanation in that order, with parts you can try yourself.",
+            desk: `<div class="frame frame--desk"><img src="examples/desk-dna.jpg" alt="An open book showing a DNA double helix with a sticky note asking for an explorable explanation, next to a sheet numbering the questions what, who, how, why and when" loading="lazy"></div>`,
+            result: `<div class="frame frame--page"><iframe src="examples/pairs-that-fit.html" title="The pairs that fit, an explorable explanation of DNA base pairing" loading="lazy"></iframe></div>`,
+            caption: "Interactive. Scroll and try the pairs.",
+          },
+          {
+            label: "4 · Storyboard",
+            name: "Storyboard",
+            title: "A storyboard becomes an animation",
+            text: "Four small sheets, one per frame, shown one after another as a single collection with the ok sign. A paper plane takes off from the desk, flies a loop and lands in a mug. The demo plays the frames as one animation.",
+            deskTodo:
+              "Four small sheets in a row, one frame each: a paper plane on the desk, the plane lifting off, the plane flying a loop, the plane landing in a mug.",
+            result: animHtml,
+            mount: mountAnim,
+          },
+          {
+            label: "5 · This page",
+            name: "This page",
+            title: "A landing page from five sheets of paper",
+            text: "Sticky notes said what to build and how it should look. Five paper sheets set the sections in order. One thumbs up, and the agent built this page.",
+            desk: `<div class="frame frame--desk"><img src="${SKETCH}" alt="Desk with two yellow sticky notes and five paper sheets sketching the sections of this landing page"></div>`,
+            result: `<div class="frame frame--embed"><div class="mini" role="img" aria-label="Miniature of this page"><b>TAFEL</b><i class="h"></i><i style="width:85%"></i><div class="cols"><span class="box"></span><span class="box"></span></div><div class="cols"><i></i><i></i></div><i class="note"></i></div></div>`,
+            caption: "You're reading the result.",
+          },
+        ];
+
+        const canEnlarge =
+          typeof HTMLDialogElement === "function" &&
+          "showModal" in HTMLDialogElement.prototype;
+        const enlargeIcon = `<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2h4v4M6 14H2v-4M14 2 9.5 6.5M2 14l4.5-4.5"></path></svg>`;
+        const enlargeButton = (kind, what) =>
+          canEnlarge
+            ? `<button class="enlarge" type="button" data-enlarge="${kind}" aria-label="Enlarge ${what}">${enlargeIcon}Enlarge</button>`
+            : "";
+        const deskTodo = (description) =>
+          `<div class="frame frame--todo"><p><strong>Desk photo to record</strong></p><p>${description}</p></div>`;
+
+        const tabs = document.getElementById("tabs");
+        const panel = document.getElementById("example");
+        const viewer = document.getElementById("viewer");
+        const viewerTitle = document.getElementById("viewer-title");
+        const viewerBody = document.getElementById("viewer-body");
+        let active = null;
+        let current = 0;
+        let enlarged = null;
+
+        const show = (index, focus = false) => {
+          const example = examples[index];
+          current = index;
+          active?.destroy();
+          active = null;
+          [...tabs.children].forEach((tab, i) => {
+            tab.setAttribute("aria-selected", String(i === index));
+            tab.tabIndex = i === index ? 0 : -1;
+            if (i === index && focus) tab.focus();
+          });
+          panel.setAttribute("aria-labelledby", `tab-${index}`);
+          const resultCaption = example.caption
+            ? ` · <span style="text-transform:none;letter-spacing:0">${example.caption}</span>`
+            : " · demo";
+          panel.innerHTML = `
+        <div class="example__text"><h3>${example.title}</h3><p class="lede">${example.text}</p></div>
+        <div class="pair breakout">
+          <figure>${example.desk ?? deskTodo(example.deskTodo)}<figcaption><span class="tag">Desk view</span>${example.desk ? enlargeButton("desk", "desk view") : ""}</figcaption></figure>
+          <figure>${example.result}<figcaption><span class="tag">Working result${resultCaption}</span>${enlargeButton("result", "working result")}</figcaption></figure>
+        </div>`;
+          const resultFrame = panel
+            .querySelectorAll(".pair figure")[1]
+            .querySelector(".frame");
+          if (example.mount) active = example.mount(resultFrame);
+        };
+
+        const openViewer = (button) => {
+          const figure = button.closest("figure");
+          const frame = figure.querySelector(".frame");
+          const marker = document.createComment("enlarged");
+          frame.before(marker);
+          viewerBody.append(frame);
+          const example = examples[current];
+          viewerTitle.textContent = `${example.name}: ${button.dataset.enlarge === "desk" ? "desk view" : "working result"}`;
+          enlarged = { frame, marker, trigger: button };
+          viewer.showModal();
+          active?.redraw?.();
+        };
+
+        if (canEnlarge) {
+          panel.addEventListener("click", (event) => {
+            const button = event.target.closest("[data-enlarge]");
+            if (button) openViewer(button);
+          });
+          document
+            .getElementById("viewer-close")
+            .addEventListener("click", () => viewer.close());
+          viewer.addEventListener("click", (event) => {
+            if (event.target === viewer) viewer.close();
+          });
+          viewer.addEventListener("close", () => {
+            if (!enlarged) return;
+            active?.pause();
+            enlarged.marker.replaceWith(enlarged.frame);
+            enlarged.trigger.focus();
+            enlarged = null;
+            active?.redraw?.();
+          });
+        }
+
+        examples.forEach((example, index) => {
+          const tab = document.createElement("button");
+          tab.type = "button";
+          tab.className = "tab";
+          tab.id = `tab-${index}`;
+          tab.setAttribute("role", "tab");
+          tab.setAttribute("aria-controls", "example");
+          tab.textContent = example.label;
+          tab.addEventListener("click", () => {
+            if (current !== index) show(index);
+          });
+          tab.addEventListener("keydown", (event) => {
+            const n = examples.length;
+            const next = {
+              ArrowRight: (index + 1) % n,
+              ArrowLeft: (index - 1 + n) % n,
+              Home: 0,
+              End: n - 1,
+            }[event.key];
+            if (next === undefined) return;
+            event.preventDefault();
+            show(next, true);
+          });
+          tabs.appendChild(tab);
+        });
+        show(0);
+
+        const copy = document.getElementById("copy-config");
+        const config = document.getElementById("config");
+        copy.addEventListener("click", () => {
+          navigator.clipboard
+            .writeText(config.textContent)
+            .then(() => {
+              copy.textContent = "Copied";
+            })
+            .catch(() => {
+              const range = document.createRange();
+              range.selectNodeContents(config);
+              const selection = window.getSelection();
+              selection.removeAllRanges();
+              selection.addRange(range);
+              copy.textContent = "Press ⌘C";
+            });
+          setTimeout(() => {
+            copy.textContent = "Copy";
+          }, 2000);
+        });
+      })();
+    </script>
+  </body>
+</html>

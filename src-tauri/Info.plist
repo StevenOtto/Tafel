@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>NSCameraUsageDescription</key>
+  <string>Tafel watches your desk and wall through your cameras and recognises your hand gestures. While a camera is watching, the AI agent you connect can look at the desk and receives the snapshots you send it.</string>
+  <key>NSLocalNetworkUsageDescription</key>
+  <string>Tafel reads frames from network cameras you add, such as a phone running an IP-camera app, and only from hosts on your local network.</string>
+  <!-- Opt in to the Continuity Camera device type so a nearby iPhone appears
+       as a first-class camera rather than a deprecated external device. -->
+  <key>NSCameraUseContinuityCameraDeviceType</key>
+  <true/>
+</dict>
+</plist>

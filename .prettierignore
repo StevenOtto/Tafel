@@ -1,0 +1,9 @@
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/gen/
+# Vendored ext-apps SDK bundle lives inside this single-file MCP App.
+src-tauri/mcp-app/delivery.html
+
+# Example pages made by agents, kept exactly as they were made.
+site/examples/
