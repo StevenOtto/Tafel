@@ -178,6 +178,26 @@ export const clampCrop = (rect: Rect): Rect => {
   return { x, y, width, height };
 };
 
+/**
+ * Longest side of a snapshot. Matches the 1920×1080 the cameras are asked
+ * for, so a full-frame snapshot keeps every captured pixel; portrait and
+ * rotated frames get the same limit as landscape ones.
+ */
+export const SNAPSHOT_MAX_EDGE = 1920;
+
+/** A region's output size: scaled down to fit `maxEdge`, never up. */
+export const fitWithin = (
+  width: number,
+  height: number,
+  maxEdge: number,
+): { width: number; height: number } => {
+  const scale = Math.min(1, maxEdge / Math.max(width, height));
+  return {
+    width: Math.max(1, Math.round(width * scale)),
+    height: Math.max(1, Math.round(height * scale)),
+  };
+};
+
 export const setCrop = (
   set: readonly Camera[],
   deviceId: string,
