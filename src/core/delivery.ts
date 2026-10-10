@@ -20,8 +20,12 @@ export interface SnapshotInput {
   readonly focus?: { x: number; y: number };
 }
 
-/** A collection accumulates snapshots between two ok-signs. */
-export const MAX_COLLECTION = 12;
+/**
+ * A collection accumulates snapshots between two ok-signs. Eight full-frame
+ * 1920×1080 snapshots stay under Claude Code's default 25,000-token limit
+ * for one MCP tool result.
+ */
+export const MAX_COLLECTION = 8;
 /** A collection expires after this long without an addition. */
 export const COLLECTION_TIMEOUT_MS = 10 * 60 * 1000;
 

@@ -5,7 +5,12 @@
  * once, on the way in — so display, detection, ring, and snapshot agree.
  */
 
-import { Rect, Rotation } from "../core/cameraSet";
+import {
+  Rect,
+  Rotation,
+  SNAPSHOT_MAX_EDGE,
+  fitWithin,
+} from "../core/cameraSet";
 
 /** Longest side of the frame handed to Vision; plenty for hand pose. */
 export const DETECTION_MAX_WIDTH = 640;
@@ -177,8 +182,9 @@ export const sampleFrame = (
     const sw = Math.max(1, Math.round(region.width * width));
     const sh = Math.max(1, Math.round(region.height * height));
     const out = document.createElement("canvas");
-    out.width = Math.min(1280, sw);
-    out.height = Math.max(1, Math.round((out.width * sh) / sw));
+    const size = fitWithin(sw, sh, SNAPSHOT_MAX_EDGE);
+    out.width = size.width;
+    out.height = size.height;
     const ctx = out.getContext("2d");
     if (!ctx) return "";
     ctx.drawImage(canvas, sx, sy, sw, sh, 0, 0, out.width, out.height);

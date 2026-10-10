@@ -6,6 +6,7 @@ import {
   addNetworkCamera,
   availableToAdd,
   clampCrop,
+  fitWithin,
   isLocalCameraUrl,
   isNetworkCamera,
   maskUrl,
@@ -154,5 +155,15 @@ describe("network cameras", () => {
     expect(maskUrl("http://user:pass@192.168.1.5/stream")).not.toContain(
       "pass",
     );
+  });
+
+  it("fits a snapshot within the longest-edge limit without upscaling", () => {
+    expect(fitWithin(1920, 1080, 1920)).toEqual({ width: 1920, height: 1080 });
+    expect(fitWithin(3840, 2160, 1920)).toEqual({ width: 1920, height: 1080 });
+    // Portrait frames are limited by their height, not their width.
+    expect(fitWithin(1080, 1920, 1920)).toEqual({ width: 1080, height: 1920 });
+    expect(fitWithin(2160, 3840, 1920)).toEqual({ width: 1080, height: 1920 });
+    // A small crop stays at its own size.
+    expect(fitWithin(640, 360, 1920)).toEqual({ width: 640, height: 360 });
   });
 });

@@ -153,7 +153,7 @@ current session from an in-memory copy.
 **Deliveries.** The unit of input is a _delivery_: one or more snapshots,
 from one or more cameras, sent by one gesture (thumbs-up = single,
 two-thumbs-up = all cameras, ok-sign = open/close a collection accumulated
-between the two ok-signs; max 12, expires after 10 min idle). A snapshot
+between the two ok-signs; max 8, expires after 10 min idle). A snapshot
 prefers the freshest hand-free frame (≤ 3 s) so the drawing is not covered by
 the user's own hand, and carries its camera name, timestamp, and that
 hand-free flag. The webview composes the whole delivery (it knows the cameras
