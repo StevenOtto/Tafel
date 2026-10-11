@@ -461,7 +461,7 @@ export const CameraTile = ({
           outcomeRef.current = result;
           setOutcome(result);
           if (result === "fire") {
-            if (output.fired === "fist") setLocalPaused(true);
+            if (output.fired === "peace-sign") setLocalPaused(true);
             if (output.fired === "open-palm") setLocalPaused(false);
             if (output.fired === "pointing") {
               const tip = detection.hands

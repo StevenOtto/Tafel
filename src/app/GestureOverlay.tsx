@@ -69,7 +69,7 @@ const GESTURE_LABELS: Record<Gesture, string> = {
   "thumbs-up": "Thumbs up",
   "two-thumbs-up": "Two thumbs up",
   "open-palm": "Open hand",
-  fist: "Fist",
+  "peace-sign": "Peace sign",
   "ok-sign": "Ok sign",
   pointing: "Pointing",
   none: "",
