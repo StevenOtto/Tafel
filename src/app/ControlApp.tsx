@@ -97,13 +97,13 @@ const GUIDE: readonly {
     label: "Two thumbs",
     action: "All cameras",
   },
+  { gesture: "open-palm", glyph: "✋", label: "Open hand", action: "Pause" },
   {
     gesture: "peace-sign",
     glyph: "✌️",
     label: "Peace sign",
-    action: "Pause",
+    action: "Resume",
   },
-  { gesture: "open-palm", glyph: "✋", label: "Open hand", action: "Resume" },
   {
     gesture: "ok-sign",
     glyph: "👌",
@@ -486,7 +486,7 @@ export const ControlApp = (): React.JSX.Element => {
       if (change) {
         announce(
           change === "paused"
-            ? "Paused — show an open hand to resume"
+            ? "Paused — show a peace sign to resume"
             : "Watching again",
         );
         return;
@@ -726,12 +726,12 @@ export const ControlApp = (): React.JSX.Element => {
   // watching camera, deliberately, so the gate is bypassed.
   const triggerGesture = useCallback(
     (gesture: Gesture) => {
-      if (gesture === "peace-sign") {
+      if (gesture === "open-palm") {
         setForcePaused(true);
-        announce("Paused — click Open hand or show one to resume");
+        announce("Paused — click Peace sign or show one to resume");
         return;
       }
-      if (gesture === "open-palm") {
+      if (gesture === "peace-sign") {
         setForcePaused(false);
         announce("Watching again");
         return;

@@ -53,8 +53,8 @@ only the first needs the machine:
    default 2000) of the same gesture; a release cancels; a dropout ≤ 250 ms
    is bridged but can never itself fire; after firing the gesture must be
    gone ≥ 500 ms before it can fire again. `src/core/actions.ts` maps the
-   fired gesture to an action given the camera's state — paused cameras only
-   hear the open hand.
+   fired gesture to an action given the camera's state — an open hand pauses,
+   and paused cameras only hear the peace sign that resumes them.
 
 **Feedback.** An SVG ring in the video's content box, centred on the
 gesturing hand(s), fills linearly and turns green on fire; a label names the

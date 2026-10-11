@@ -461,8 +461,8 @@ export const CameraTile = ({
           outcomeRef.current = result;
           setOutcome(result);
           if (result === "fire") {
-            if (output.fired === "peace-sign") setLocalPaused(true);
-            if (output.fired === "open-palm") setLocalPaused(false);
+            if (output.fired === "open-palm") setLocalPaused(true);
+            if (output.fired === "peace-sign") setLocalPaused(false);
             if (output.fired === "pointing") {
               const tip = detection.hands
                 .map((hand) => pointingTip(hand))
@@ -638,8 +638,8 @@ export const CameraTile = ({
         )}
         {status === "paused" && (
           <p className="tile__paused">
-            {gesturesEnabled && enabledGestures.includes("open-palm")
-              ? "Paused — show an open hand to resume."
+            {gesturesEnabled && enabledGestures.includes("peace-sign")
+              ? "Paused — show a peace sign to resume."
               : "Paused — click Resume to continue."}
           </p>
         )}

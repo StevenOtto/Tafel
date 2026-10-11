@@ -23,17 +23,16 @@ fills while you hold; let go before it completes and nothing happens. A short
 tone confirms a fired gesture (can be switched off). To work without gestures,
 switch **Gesture recognition** off in Settings: cameras keep watching and
 the agent still sees the desk, but no hand fires anything. Below that switch,
-each camera gesture can be turned off on its own. Pausing uses a peace sign
-rather than a fist, because a hand holding a pen looks like a fist; a fist
-does nothing. The rows in the gesture guide always work as buttons, and say
+each camera gesture can be turned off on its own. A fist does nothing,
+because a hand holding a pen looks like one. The rows in the gesture guide always work as buttons, and say
 when their camera gesture is off.
 
 | Gesture          | Action                                                   |
 | ---------------- | -------------------------------------------------------- |
 | 👍 Thumbs up     | Send a snapshot of this camera to the agent              |
 | 🙌 Two thumbs up | Send a snapshot of every watching camera                 |
-| ✌️ Peace sign    | Pause this camera — nothing is served until resumed      |
-| ✋ Open hand     | Resume (the only gesture a paused camera listens to)     |
+| ✋ Open hand     | Pause this camera — nothing is served until resumed      |
+| ✌️ Peace sign    | Resume (the only gesture a paused camera listens to)     |
 | 👌 Ok sign       | Start a collection; a second ok sign finishes & sends it |
 
 Each gesture acts on the camera that sees it. When two cameras see the same

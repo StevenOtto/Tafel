@@ -3,26 +3,26 @@ import { enabledGestures, gestureVisibleWhen, statusChange } from "./actions";
 import { GESTURES } from "./hand";
 
 describe("status changes", () => {
-  it("peace sign pauses while watching, open hand does nothing", () => {
-    expect(statusChange("peace-sign", "watching")).toBe("paused");
-    expect(statusChange("open-palm", "watching")).toBeNull();
+  it("open hand pauses while watching, peace sign does nothing", () => {
+    expect(statusChange("open-palm", "watching")).toBe("paused");
+    expect(statusChange("peace-sign", "watching")).toBeNull();
     expect(statusChange("thumbs-up", "watching")).toBeNull();
   });
 
-  it("only an open hand resumes while paused", () => {
+  it("only a peace sign resumes while paused", () => {
     for (const gesture of GESTURES) {
       expect(statusChange(gesture, "paused")).toBe(
-        gesture === "open-palm" ? "watching" : null,
+        gesture === "peace-sign" ? "watching" : null,
       );
     }
   });
 });
 
 describe("visibility gate", () => {
-  it("hides every gesture but the open hand while paused", () => {
+  it("hides every gesture but the peace sign while paused", () => {
     for (const gesture of GESTURES) {
       expect(gestureVisibleWhen(gesture, "paused")).toBe(
-        gesture === "open-palm" ? "open-palm" : "none",
+        gesture === "peace-sign" ? "peace-sign" : "none",
       );
       expect(gestureVisibleWhen(gesture, "watching")).toBe(gesture);
     }
@@ -36,9 +36,9 @@ it("filters disabled gestures before hold tracking", () => {
   expect(gestureVisibleWhen("peace-sign", "watching", ["peace-sign"])).toBe(
     "peace-sign",
   );
-  expect(gestureVisibleWhen("open-palm", "paused", [])).toBe("none");
-  expect(gestureVisibleWhen("open-palm", "paused", ["open-palm"])).toBe(
-    "open-palm",
+  expect(gestureVisibleWhen("peace-sign", "paused", [])).toBe("none");
+  expect(gestureVisibleWhen("peace-sign", "paused", ["peace-sign"])).toBe(
+    "peace-sign",
   );
   expect(gestureVisibleWhen("thumbs-up", "paused", ["thumbs-up"])).toBe("none");
 });

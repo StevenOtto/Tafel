@@ -29,7 +29,7 @@ export const gestureVisibleWhen = (
 ): Gesture => {
   if (!enabled.includes(gesture)) return "none";
   if (status === "watching") return gesture;
-  return gesture === "open-palm" ? "open-palm" : "none";
+  return gesture === "peace-sign" ? "peace-sign" : "none";
 };
 
 /** The status change a fired gesture causes, if any. */
@@ -37,6 +37,6 @@ export const statusChange = (
   gesture: Gesture,
   status: CameraStatus,
 ): CameraStatus | null => {
-  if (status === "paused") return gesture === "open-palm" ? "watching" : null;
-  return gesture === "peace-sign" ? "paused" : null;
+  if (status === "paused") return gesture === "peace-sign" ? "watching" : null;
+  return gesture === "open-palm" ? "paused" : null;
 };
