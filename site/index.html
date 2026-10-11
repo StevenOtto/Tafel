@@ -82,6 +82,7 @@
         --note: #f1df72;
         --note-ink: #1b2130;
         --wood: #d6b07f;
+        --wood-photo: #b88552;
         --sheet: #fbfaf4;
         --note-pink: #f4b9c4;
         --note-blue: #b2d7ef;
@@ -108,6 +109,7 @@
           --line: #2e3138;
           --note: #e8d566;
           --wood: #a1805a;
+          --wood-photo: #8a6440;
           --sheet: #dedbd1;
           --note-pink: #e7a9b5;
           --note-blue: #9cc4df;
@@ -124,6 +126,7 @@
         --line: #2e3138;
         --note: #e8d566;
         --wood: #a1805a;
+        --wood-photo: #8a6440;
         --sheet: #dedbd1;
         --note-pink: #e7a9b5;
         --note-blue: #9cc4df;
@@ -216,7 +219,7 @@
         font-family: var(--font-display);
         font-weight: 800;
         font-kerning: normal;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.07em;
         font-size: 1.05rem;
         text-decoration: none;
       }
@@ -691,8 +694,9 @@
         border: 1px solid var(--line);
         background: var(--surface);
       }
+      /* Matches the real desk in the photos, darker than the illustrated oak. */
       .frame--desk {
-        background: var(--wood);
+        background: var(--wood-photo);
       }
       .frame--page,
       .frame--video {
@@ -774,9 +778,6 @@
         gap: 2.4cqh;
         padding: 4.5cqw;
       }
-      .mini--page b {
-        font-size: 3cqw;
-      }
       .mini--page i {
         height: 1.2cqw;
         border-radius: 1cqw;
@@ -797,6 +798,18 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+      }
+      /* The header's wordmark, scaled to the miniature. */
+      .mini__mark {
+        display: flex;
+        align-items: center;
+        gap: 1.2cqw;
+        font: 800 3cqw/1 var(--font-display);
+        letter-spacing: 0.07em;
+      }
+      .mini__mark svg {
+        width: 4cqw;
+        height: 3.3cqw;
       }
       .mini--page .cols {
         gap: 2.4cqw;
@@ -1802,7 +1815,7 @@
               510,
               900,
             ),
-            result: `<div class="frame frame--embed"><div class="mini mini--page" role="img" aria-label="Miniature of this page"><div class="mini__nav"><b>TAFEL</b><i class="note"></i></div><i class="h"></i><i class="h" style="width:45%"></i><i style="width:80%"></i><i style="width:62%"></i><i class="note mini__button"></i><div class="cols mini__pair"><span class="box"></span><span class="box"></span></div><div class="cols"><i></i><i></i></div><div class="cols"><i style="width:70%"></i><i style="width:55%"></i></div></div></div>`,
+            result: `<div class="frame frame--embed"><div class="mini mini--page" role="img" aria-label="Miniature of this page"><div class="mini__nav"><span class="mini__mark"><svg viewBox="14 22 72 56" aria-hidden="true"><path d="M21 71V29H79V71H55M45 39L29 53L45 67" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path></svg>TAFEL</span><i class="note"></i></div><i class="h"></i><i class="h" style="width:45%"></i><i style="width:80%"></i><i style="width:62%"></i><i class="note mini__button"></i><div class="cols mini__pair"><span class="box"></span><span class="box"></span></div><div class="cols"><i></i><i></i></div><div class="cols"><i style="width:70%"></i><i style="width:55%"></i></div></div></div>`,
             caption: "You're reading the result.",
           },
         ];
