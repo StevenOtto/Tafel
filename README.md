@@ -292,3 +292,10 @@ npm test
   network-camera frames arrive as data URLs, not webview fetches.
 - The MCP server reads only the delivery bus; it binds to loopback and rmcp's
   transport rejects non-loopback hosts.
+
+## License
+
+The code is released under the [MIT License](LICENSE). The images, videos
+and brand files in `site/` and `brand/` are licensed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/): reuse them with
+credit to Steven Otto.
