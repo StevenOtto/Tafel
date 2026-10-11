@@ -85,7 +85,7 @@ signed, notarized and stapled `Tafel.dmg`, verified with `spctl` and
   image background while the real one loads. Old JPEGs removed.
 - "This page" miniature fills its frame (size container, `cqw` units).
 - Open Graph and Twitter tags with `assets/og.jpg` (1200×630), canonical
-  URL `https://stevenotto.github.io/Tafel/`, theme colours.
+  URL `https://stevenotto.github.io/tafel/`, theme colours.
 - Footer credit linking to https://x.com/_StevenOtto.
 
 Checked: Prettier, the page script parses, every referenced file exists,
