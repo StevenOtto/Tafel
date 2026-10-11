@@ -94,3 +94,14 @@ placeholder under Slow 3G, no console errors.
 
 Pending: share preview in a real card validator
 once Pages is live; the earlier Spotify and second-Mac checks.
+
+## Hero illustration (2026-10-11)
+
+The hero's app and chat mockups no longer use the desk photo. One inline SVG
+`<symbol id="desk-art">` (wood, sketched layout sheet, three sticky notes, a
+mug and a pen) is drawn once and reused with `<use>`; each spot crops it with
+its own `viewBox`, so the session thumbnails show different parts of the
+desk. Colors come from the page tokens (`--wood`, `--note*`, new `--sheet`),
+so it follows dark mode. Styles target `#desk-art` because `<use>` clones
+match selectors against the symbol, not the host. Checked in headless Chrome
+at 1400 px (light and dark) and 390 px.
