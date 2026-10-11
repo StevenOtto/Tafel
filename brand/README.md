@@ -1,8 +1,12 @@
 # Tafel — Continuous fold
 
-Production asset set selected on 10 October 2026. The mark uses the exact C1
-geometry from the first exploration: a folded table outline and an inset angled
-stroke. Round 2's paper, objects, and motion cues are not part of this identity.
+Production asset set selected on 10 October 2026 and revised on 11 October
+2026: the inset stroke now points right, so the mark reads as a prompt (`>_`).
+The chevron is 24 units tall with exact 45° arms, which keeps small sizes
+crisp, and sits 6 units from the top and left inner edges. The outline's open
+lower edge starts at x 52. Path:
+`M21 71V29H79V71H52M33 41L45 53L33 65`. Round 2's paper, objects, and motion
+cues are not part of this identity.
 
 ## Choose an asset
 
@@ -36,8 +40,9 @@ for its tagline; use the supplied PNG when exact appearance matters.
 - Sticky-note yellow: `#f1df72`
 - Mark: 6-unit round stroke on a 100 × 100 coordinate system.
 - Keep at least 12 units of clear space around the visible mark.
-- Keep the angles, open lower edge, and rounded stroke ends intact. Do not mirror,
-  stretch, close the gap, or add a cursor, paper, or other symbol.
+- Keep the angles, open lower edge, and rounded stroke ends intact. Do not
+  flip the chevron back, stretch, close the gap, or add a cursor, paper, or
+  other symbol.
 - Default app treatment: ink mark on yellow. Dark and paper are optional exports;
   they do not automatically switch the installed macOS app's appearance.
 - Prefer at least 24px for the standalone mark and 120px for a horizontal logo.

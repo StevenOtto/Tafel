@@ -81,7 +81,9 @@
         --line: #d9d9d1;
         --note: #f1df72;
         --note-ink: #1b2130;
-        --wood: #b88552;
+        --wood: #d6b07f;
+        --wood-photo: #b88552;
+        --sheet: #fbfaf4;
         --note-pink: #f4b9c4;
         --note-blue: #b2d7ef;
         --player: #2f58c9;
@@ -106,7 +108,9 @@
           --muted: #a3a7af;
           --line: #2e3138;
           --note: #e8d566;
-          --wood: #8a6440;
+          --wood: #a1805a;
+          --wood-photo: #8a6440;
+          --sheet: #dedbd1;
           --note-pink: #e7a9b5;
           --note-blue: #9cc4df;
           --player: #86a6ff;
@@ -121,7 +125,9 @@
         --muted: #a3a7af;
         --line: #2e3138;
         --note: #e8d566;
-        --wood: #8a6440;
+        --wood: #a1805a;
+        --wood-photo: #8a6440;
+        --sheet: #dedbd1;
         --note-pink: #e7a9b5;
         --note-blue: #9cc4df;
         --player: #86a6ff;
@@ -213,7 +219,7 @@
         font-family: var(--font-display);
         font-weight: 800;
         font-kerning: normal;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.07em;
         font-size: 1.05rem;
         text-decoration: none;
       }
@@ -358,11 +364,9 @@
         overflow: hidden;
         background: var(--wood);
       }
-      .cam img {
+      .cam .art {
         width: 100%;
         height: 100%;
-        object-fit: cover;
-        object-position: 50% 22%;
         display: block;
       }
       .cam__status {
@@ -432,18 +436,11 @@
         display: flex;
         gap: 8px;
       }
-      .thumbs img {
+      .thumbs .art {
         width: 56px;
         height: 40px;
-        object-fit: cover;
         border-radius: 4px;
         border: 1px solid var(--line);
-      }
-      .thumbs .t1 {
-        object-position: 50% 25%;
-      }
-      .thumbs .t2 {
-        object-position: 50% 70%;
       }
 
       .chat {
@@ -480,12 +477,73 @@
         font: 0.7rem/1.3 var(--font-mono);
         color: var(--muted);
       }
-      .card img {
+      .card .art {
         width: 64px;
         height: 44px;
-        object-fit: cover;
-        object-position: 50% 22%;
         border-radius: 4px;
+      }
+
+      /* The hero's desk: one illustration, cropped per spot by viewBox. */
+      .art-defs {
+        position: absolute;
+        width: 0;
+        height: 0;
+      }
+      #desk-art .wood {
+        fill: var(--wood);
+      }
+      #desk-art .grain {
+        fill: none;
+        stroke: rgba(60, 30, 10, 0.16);
+        stroke-width: 3;
+      }
+      #desk-art .shade {
+        fill: rgba(40, 20, 5, 0.22);
+      }
+      #desk-art .sheet {
+        fill: var(--sheet);
+      }
+      #desk-art .note {
+        fill: var(--note);
+      }
+      #desk-art .note--pink {
+        fill: var(--note-pink);
+      }
+      #desk-art .note--blue {
+        fill: var(--note-blue);
+      }
+      #desk-art .ink {
+        fill: none;
+        stroke: #2b303b;
+        stroke-width: 4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      #desk-art .ink--thin {
+        stroke-width: 3;
+      }
+      #desk-art .hand {
+        font: 600 25px var(--font-hand);
+        fill: #2b303b;
+      }
+      #desk-art .hand--title {
+        font-size: 40px;
+        text-anchor: middle;
+      }
+      #desk-art .mug {
+        fill: #ece8df;
+      }
+      #desk-art .coffee {
+        fill: #6a4429;
+      }
+      #desk-art .pen {
+        fill: var(--player);
+      }
+      #desk-art .pen-tip {
+        fill: #2b303b;
+      }
+      #desk-art .pen-clip {
+        fill: rgba(255, 255, 255, 0.55);
       }
       .card .row {
         display: flex;
@@ -636,8 +694,9 @@
         border: 1px solid var(--line);
         background: var(--surface);
       }
+      /* Matches the real desk in the photos, darker than the illustrated oak. */
       .frame--desk {
-        background: var(--wood);
+        background: var(--wood-photo);
       }
       .frame--page,
       .frame--video {
@@ -719,9 +778,6 @@
         gap: 2.4cqh;
         padding: 4.5cqw;
       }
-      .mini--page b {
-        font-size: 3cqw;
-      }
       .mini--page i {
         height: 1.2cqw;
         border-radius: 1cqw;
@@ -742,6 +798,18 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+      }
+      /* The header's wordmark, scaled to the miniature. */
+      .mini__mark {
+        display: flex;
+        align-items: center;
+        gap: 1.2cqw;
+        font: 800 3cqw/1 var(--font-display);
+        letter-spacing: 0.07em;
+      }
+      .mini__mark svg {
+        width: 4cqw;
+        height: 3.3cqw;
       }
       .mini--page .cols {
         gap: 2.4cqw;
@@ -1011,7 +1079,7 @@
               focusable="false"
             >
               <path
-                d="M21 71V29H79V71H55M45 39L29 53L45 67"
+                d="M21 71V29H79V71H52M33 41L45 53L33 65"
                 fill="none"
                 stroke="currentColor"
                 stroke-width="6"
@@ -1044,6 +1112,182 @@
               </p>
             </div>
 
+            <svg class="art-defs" aria-hidden="true">
+              <symbol id="desk-art" viewBox="0 0 800 600">
+                <rect class="wood" width="800" height="600"></rect>
+                <path
+                  class="grain"
+                  d="M0 60c180-22 420 26 800-4M0 170c220 20 470-30 800 6M0 300c160-24 500 22 800-10M0 420c260 18 520-26 800 8M0 540c200-16 420 20 800-6"
+                ></path>
+                <g transform="rotate(-4 160 140)">
+                  <rect
+                    class="shade"
+                    x="94"
+                    y="72"
+                    width="150"
+                    height="150"
+                  ></rect>
+                  <rect
+                    class="note"
+                    x="86"
+                    y="64"
+                    width="150"
+                    height="150"
+                  ></rect>
+                  <text class="hand" x="102" y="112">turn this</text>
+                  <text class="hand" x="102" y="146">into a landing</text>
+                  <text class="hand" x="102" y="180">page →</text>
+                </g>
+                <g transform="rotate(2 405 280)">
+                  <rect
+                    class="shade"
+                    x="280"
+                    y="96"
+                    width="270"
+                    height="380"
+                    rx="3"
+                  ></rect>
+                  <rect
+                    class="sheet"
+                    x="270"
+                    y="86"
+                    width="270"
+                    height="380"
+                    rx="3"
+                  ></rect>
+                  <text class="hand hand--title" x="405" y="140">TAFEL</text>
+                  <path class="ink" d="M330 160c40-6 110 4 150-2"></path>
+                  <rect
+                    class="ink"
+                    x="292"
+                    y="186"
+                    width="122"
+                    height="88"
+                    rx="6"
+                  ></rect>
+                  <path
+                    class="ink"
+                    d="M302 200h64M302 216h40M384 200h20M384 214h20M384 228h20M384 242h20M302 258h18h8h18"
+                  ></path>
+                  <rect
+                    class="ink"
+                    x="426"
+                    y="186"
+                    width="94"
+                    height="88"
+                    rx="6"
+                  ></rect>
+                  <path class="ink" d="M438 198l70 64M508 198l-70 64"></path>
+                  <rect
+                    class="ink"
+                    x="292"
+                    y="300"
+                    width="106"
+                    height="62"
+                    rx="4"
+                  ></rect>
+                  <rect
+                    class="ink"
+                    x="414"
+                    y="300"
+                    width="106"
+                    height="62"
+                    rx="4"
+                  ></rect>
+                  <path
+                    class="ink"
+                    d="M294 392c30-4 70 3 104-1M294 414c40 3 90-4 140 0M294 436c26-3 60 2 84-1"
+                  ></path>
+                </g>
+                <g transform="rotate(-6 140 440)">
+                  <rect
+                    class="shade"
+                    x="86"
+                    y="386"
+                    width="120"
+                    height="120"
+                  ></rect>
+                  <rect
+                    class="note note--blue"
+                    x="80"
+                    y="380"
+                    width="120"
+                    height="120"
+                  ></rect>
+                  <path
+                    class="ink ink--thin"
+                    d="M96 410h10M116 410c20-3 44 2 66-1M96 440h10M116 440c18 2 40-3 58 0M96 470h10M116 470c22-2 38 2 50 0"
+                  ></path>
+                </g>
+                <g transform="rotate(5 640 380)">
+                  <rect
+                    class="shade"
+                    x="582"
+                    y="308"
+                    width="140"
+                    height="140"
+                  ></rect>
+                  <rect
+                    class="note note--pink"
+                    x="574"
+                    y="300"
+                    width="140"
+                    height="140"
+                  ></rect>
+                  <path
+                    class="ink ink--thin"
+                    d="M592 334c30-4 70 3 104-1M592 362c24 3 60-3 90 0M592 390c34-3 56 2 80-1M592 418c20 2 30-2 44 0"
+                  ></path>
+                </g>
+                <rect
+                  class="shade"
+                  x="707"
+                  y="134"
+                  width="44"
+                  height="26"
+                  rx="13"
+                ></rect>
+                <rect
+                  class="mug"
+                  x="700"
+                  y="126"
+                  width="44"
+                  height="26"
+                  rx="13"
+                ></rect>
+                <circle class="shade" cx="668" cy="148" r="62"></circle>
+                <circle class="mug" cx="660" cy="140" r="62"></circle>
+                <circle class="coffee" cx="660" cy="140" r="48"></circle>
+                <g transform="rotate(-28 590 500)">
+                  <rect
+                    class="shade"
+                    x="496"
+                    y="498"
+                    width="196"
+                    height="16"
+                    rx="8"
+                  ></rect>
+                  <rect
+                    class="pen"
+                    x="490"
+                    y="490"
+                    width="196"
+                    height="16"
+                    rx="8"
+                  ></rect>
+                  <path class="pen-tip" d="M490 492l-26 6 26 6z"></path>
+                  <rect
+                    class="pen-clip"
+                    x="640"
+                    y="494"
+                    width="38"
+                    height="8"
+                    rx="4"
+                  ></rect>
+                </g>
+              </symbol>
+            </svg>
+
             <div class="flow" aria-label="From desk to result">
               <figure>
                 <figcaption>
@@ -1056,7 +1300,9 @@
                   </div>
                   <div class="app">
                     <div class="cam">
-                      <img src="examples/desk-landing-page-510.webp" alt="" />
+                      <svg class="art" viewBox="0 0 800 600">
+                        <use href="#desk-art" width="800" height="600"></use>
+                      </svg>
                       <span class="cam__status">Desk · watching</span>
                       <svg class="ring" viewBox="0 0 54 54">
                         <circle class="track" cx="27" cy="27" r="22"></circle>
@@ -1075,16 +1321,20 @@
                       <span>Waiting for your prompt</span>
                     </div>
                     <div class="thumbs">
-                      <img
-                        class="t1"
-                        src="examples/desk-landing-page-510.webp"
-                        alt=""
-                      />
-                      <img
-                        class="t2"
-                        src="examples/desk-landing-page-510.webp"
-                        alt=""
-                      />
+                      <svg
+                        class="art"
+                        viewBox="262 84 290 207"
+                        preserveAspectRatio="xMidYMid slice"
+                      >
+                        <use href="#desk-art" width="800" height="600"></use>
+                      </svg>
+                      <svg
+                        class="art"
+                        viewBox="540 60 252 180"
+                        preserveAspectRatio="xMidYMid slice"
+                      >
+                        <use href="#desk-art" width="800" height="600"></use>
+                      </svg>
                     </div>
                   </div>
                 </div>
@@ -1115,7 +1365,13 @@
                           <span class="dot"></span>Snapshot #17 · Delivered to
                           agent
                         </div>
-                        <img src="examples/desk-landing-page-510.webp" alt="" />
+                        <svg
+                          class="art"
+                          viewBox="40 40 700 482"
+                          preserveAspectRatio="xMidYMid slice"
+                        >
+                          <use href="#desk-art" width="800" height="600"></use>
+                        </svg>
                       </div>
                       <p class="reply">
                         Turning your layout into a landing page: hero, five
@@ -1556,7 +1812,7 @@
               510,
               900,
             ),
-            result: `<div class="frame frame--embed"><div class="mini mini--page" role="img" aria-label="Miniature of this page"><div class="mini__nav"><b>TAFEL</b><i class="note"></i></div><i class="h"></i><i class="h" style="width:45%"></i><i style="width:80%"></i><i style="width:62%"></i><i class="note mini__button"></i><div class="cols mini__pair"><span class="box"></span><span class="box"></span></div><div class="cols"><i></i><i></i></div><div class="cols"><i style="width:70%"></i><i style="width:55%"></i></div></div></div>`,
+            result: `<div class="frame frame--embed"><div class="mini mini--page" role="img" aria-label="Miniature of this page"><div class="mini__nav"><span class="mini__mark"><svg viewBox="14 22 72 56" aria-hidden="true"><path d="M21 71V29H79V71H52M33 41L45 53L33 65" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path></svg>TAFEL</span><i class="note"></i></div><i class="h"></i><i class="h" style="width:45%"></i><i style="width:80%"></i><i style="width:62%"></i><i class="note mini__button"></i><div class="cols mini__pair"><span class="box"></span><span class="box"></span></div><div class="cols"><i></i><i></i></div><div class="cols"><i style="width:70%"></i><i style="width:55%"></i></div></div></div>`,
             caption: "You're reading the result.",
           },
         ];
