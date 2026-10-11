@@ -136,7 +136,7 @@ as a network camera instead.
 - Website: `site/` is the static landing page, with no build step. Preview
   it with `python3 -m http.server --directory site` and open
   `http://localhost:8000`. `.github/workflows/pages.yml` deploys it to
-  GitHub Pages; it runs manually while the repository is private. The
+  GitHub Pages on every push to `main` that touches `site/`. The
   download button links to `releases/latest/download/Tafel.dmg`. Files in
   `site/examples/` are agent-made example pages and media, kept as they
   were made.

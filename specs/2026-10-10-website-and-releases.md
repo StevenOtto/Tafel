@@ -19,9 +19,9 @@ from version tags so the site's download button points at a real build.
     terms forbid hiding the player, and sound cannot start without a click.
   - Download button: `releases/latest/download/Tafel.dmg`, a stable asset
     name, so the link never changes between versions.
-- `.github/workflows/pages.yml`: deploys `site/` to GitHub Pages. Manual
-  trigger only while the repository is private (Pages on a private repository
-  needs a paid plan). Switch to `push` on `main` when going public.
+- `.github/workflows/pages.yml`: deploys `site/` to GitHub Pages on every
+  push to `main` that touches `site/`, or by hand. It was manual-only while
+  the repository was private; the repository went public on 11 October 2026.
 - `.github/workflows/release.yml`: on a `v*` tag, on a macOS runner:
   check the tag matches `tauri.conf.json`'s version, import the Developer ID
   certificate into a temporary keychain, build, sign and notarize the app,
@@ -105,3 +105,15 @@ desk. Colors come from the page tokens (`--wood`, `--note*`, new `--sheet`),
 so it follows dark mode. Styles target `#desk-art` because `<use>` clones
 match selectors against the symbol, not the host. Checked in headless Chrome
 at 1400 px (light and dark) and 390 px.
+
+## Public launch (2026-10-11)
+
+The repository is public and Pages (source: GitHub Actions) serves
+https://stevenotto.github.io/Tafel/. `v0.2.0` was released from `main`
+`c8c156f`; the downloaded `Tafel.dmg` and the app inside it pass
+`stapler validate` and `spctl` ("Notarized Developer ID"), and the
+`releases/latest/download/Tafel.dmg` link resolves. The workflows now use
+the Node 24 majors of the GitHub actions (checkout v7, setup-node v7,
+configure-pages v6, upload-pages-artifact v5, deploy-pages v5).
+
+Pending: the share preview in a card validator, and a second-Mac install.
