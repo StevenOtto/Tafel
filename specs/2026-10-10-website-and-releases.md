@@ -85,7 +85,9 @@ signed, notarized and stapled `Tafel.dmg`, verified with `spctl` and
   image background while the real one loads. Old JPEGs removed.
 - "This page" miniature fills its frame (size container, `cqw` units).
 - Open Graph and Twitter tags with `assets/og.jpg` (1200×630), canonical
-  URL `https://stevenotto.github.io/tafel/`, theme colours.
+  URL `https://stevenotto.github.io/tafel/`, theme colours. (The repository
+  was renamed from `Tafel` to `tafel` on 2026-10-11; GitHub redirects the old
+  repository and release URLs, but not the old Pages path `/Tafel/`.)
 - Footer credit linking to https://x.com/_StevenOtto.
 
 Checked: Prettier, the page script parses, every referenced file exists,
