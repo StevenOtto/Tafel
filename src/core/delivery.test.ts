@@ -38,7 +38,7 @@ describe("deliveryIntent (no open collection)", () => {
   });
 
   it("pause/resume/none gestures make no delivery", () => {
-    for (const g of ["open-palm", "fist", "none"] as const) {
+    for (const g of ["open-palm", "peace-sign", "none"] as const) {
       expect(deliveryIntent(g, CLOSED_COLLECTION)).toEqual({ type: "none" });
     }
   });

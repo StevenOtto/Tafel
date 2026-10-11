@@ -17,7 +17,8 @@ export interface Settings {
   holdMs: number;
   soundOnFire: boolean;
   gesturesEnabled: boolean;
-  enabledGestures: readonly Gesture[];
+  /** Camera gestures switched off; a gesture added later starts on. */
+  disabledGestures: readonly Gesture[];
 }
 
 export const getSettings = (): Promise<Settings> => invoke("get_settings");

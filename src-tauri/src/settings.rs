@@ -54,9 +54,23 @@ pub struct Settings {
     pub sound_on_fire: bool,
     /// Look for hands at all; off, cameras keep watching but no gesture fires.
     pub gestures_enabled: bool,
-    /// Fist pause is opt-in: a pen grip can resemble it.
-    pub enabled_gestures: Vec<String>,
+    /// Camera gestures switched off; a gesture added later starts on.
+    pub disabled_gestures: Vec<String>,
+    /// Up to 0.2 the file listed the gestures that were on; read once and
+    /// turned into `disabled_gestures`, never written back.
+    #[serde(rename = "enabledGestures", skip_serializing)]
+    legacy_enabled_gestures: Option<Vec<String>>,
 }
+
+/// The switchable gestures that existed while settings stored `enabledGestures`
+/// (the fist was dropped, so it is not carried over).
+const LEGACY_GESTURES: [&str; 5] = [
+    "thumbs-up",
+    "two-thumbs-up",
+    "open-palm",
+    "ok-sign",
+    "pointing",
+];
 
 impl Default for Settings {
     fn default() -> Self {
@@ -66,16 +80,8 @@ impl Default for Settings {
             hold_ms: 2000,
             sound_on_fire: true,
             gestures_enabled: true,
-            enabled_gestures: [
-                "thumbs-up",
-                "two-thumbs-up",
-                "open-palm",
-                "ok-sign",
-                "pointing",
-            ]
-            .into_iter()
-            .map(str::to_string)
-            .collect(),
+            disabled_gestures: Vec::new(),
+            legacy_enabled_gestures: None,
         }
     }
 }
@@ -84,7 +90,15 @@ pub fn load(path: &Path) -> Settings {
     let Ok(raw) = fs::read_to_string(path) else {
         return Settings::default();
     };
-    serde_json::from_str(&raw).unwrap_or_default()
+    let mut settings: Settings = serde_json::from_str(&raw).unwrap_or_default();
+    if let Some(enabled) = settings.legacy_enabled_gestures.take() {
+        settings.disabled_gestures = LEGACY_GESTURES
+            .into_iter()
+            .filter(|gesture| !enabled.iter().any(|on| on == gesture))
+            .map(str::to_string)
+            .collect();
+    }
+    settings
 }
 
 pub fn save(path: &Path, settings: &Settings) -> Result<(), String> {
@@ -111,16 +125,35 @@ mod tests {
     }
 
     #[test]
-    fn gesture_preferences_roundtrip_including_empty_and_opt_in_fist() {
+    fn gesture_preferences_roundtrip_including_empty() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("settings.json");
         let mut settings = Settings::default();
-        settings.enabled_gestures = vec!["fist".into()];
+        settings.disabled_gestures = vec!["peace-sign".into()];
         save(&path, &settings).unwrap();
-        assert_eq!(load(&path).enabled_gestures, vec!["fist"]);
-        settings.enabled_gestures.clear();
+        assert_eq!(load(&path).disabled_gestures, vec!["peace-sign"]);
+        settings.disabled_gestures.clear();
         save(&path, &settings).unwrap();
-        assert!(load(&path).enabled_gestures.is_empty());
+        assert!(load(&path).disabled_gestures.is_empty());
+    }
+
+    /// A 0.1 file lists what was on. Gestures missing from it stay off, the
+    /// dropped fist is ignored, and the peace sign added since starts on.
+    #[test]
+    fn legacy_enabled_gestures_become_disabled_gestures() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("settings.json");
+        std::fs::write(
+            &path,
+            r#"{ "enabledGestures": ["thumbs-up", "two-thumbs-up", "fist", "pointing"] }"#,
+        )
+        .unwrap();
+        let loaded = load(&path);
+        assert_eq!(loaded.disabled_gestures, vec!["open-palm", "ok-sign"]);
+        save(&path, &loaded).unwrap();
+        let raw = std::fs::read_to_string(&path).unwrap();
+        assert!(!raw.contains("enabledGestures"));
+        assert_eq!(load(&path).disabled_gestures, loaded.disabled_gestures);
     }
 
     #[test]
@@ -204,6 +237,6 @@ mod tests {
         assert_eq!(loaded.hold_ms, 2000);
         assert!(loaded.sound_on_fire);
         assert!(loaded.gestures_enabled);
-        assert!(!loaded.enabled_gestures.iter().any(|g| g == "fist"));
+        assert!(loaded.disabled_gestures.is_empty());
     }
 }

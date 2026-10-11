@@ -44,16 +44,17 @@ only the first needs the machine:
    convention. On-device, offline, ~20–40 ms on Apple silicon.
 2. **Gesture.** `src/core/hand.ts` classifies a hand from joint geometry
    only — every rule is a ratio against the palm length, so it is
-   distance-invariant: `thumbs-up`, `open-palm`, `fist`, `ok-sign`, else
-   `none`; two thumbs-up hands make `two-thumbs-up`. Unclear evidence yields
-   `none` rather than a guess.
+   distance-invariant: `thumbs-up`, `open-palm`, `peace-sign` (index and
+   middle spread in a V), `ok-sign`, `pointing`, else `none`; two thumbs-up
+   hands make `two-thumbs-up`. A fist is `none` on purpose, since a pen grip
+   looks the same. Unclear evidence yields `none` rather than a guess.
 3. **Hold.** `src/core/hold.ts` is a state machine with no clock of its own:
    idle → holding → fired. The hold completes after `holdMs` (setting,
    default 2000) of the same gesture; a release cancels; a dropout ≤ 250 ms
    is bridged but can never itself fire; after firing the gesture must be
    gone ≥ 500 ms before it can fire again. `src/core/actions.ts` maps the
-   fired gesture to an action given the camera's state — paused cameras only
-   hear the open hand.
+   fired gesture to an action given the camera's state — an open hand pauses,
+   and paused cameras only hear the peace sign that resumes them.
 
 **Feedback.** An SVG ring in the video's content box, centred on the
 gesturing hand(s), fills linearly and turns green on fire; a label names the

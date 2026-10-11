@@ -50,7 +50,7 @@ export interface Detection {
 
 /** What one hand is doing. */
 export type HandPose =
-  "thumbs-up" | "open-palm" | "fist" | "ok-sign" | "pointing" | "none";
+  "thumbs-up" | "open-palm" | "peace-sign" | "ok-sign" | "pointing" | "none";
 
 /** What the frame as a whole signals; adds the two-handed variant. */
 export type Gesture = HandPose | "two-thumbs-up";
@@ -59,7 +59,7 @@ export const GESTURES: readonly Gesture[] = [
   "thumbs-up",
   "two-thumbs-up",
   "open-palm",
-  "fist",
+  "peace-sign",
   "ok-sign",
   "pointing",
   "none",
@@ -146,6 +146,20 @@ export const classifyHand = (hand: Hand): HandPose => {
   );
   if (thumbExtended && allExtended) return "open-palm";
 
+  // Index and middle up and spread into a V, the others down. The spread
+  // keeps it clear of two fingers resting side by side on a pen.
+  const middleTip = joint(hand, "middleTip");
+  const spread =
+    middleTip !== null && distance(indexTip, middleTip) > 0.3 * palm;
+  if (
+    spread &&
+    index === "extended" &&
+    middle === "extended" &&
+    ring === "curled" &&
+    little === "curled"
+  )
+    return "peace-sign";
+
   // Only the index extended, thumb not: pointing. Checked before the curled
   // cases and requiring a tucked thumb keeps it clear of thumbs-up and ok.
   const onlyIndex =
@@ -158,8 +172,8 @@ export const classifyHand = (hand: Hand): HandPose => {
   const allCurled = [index, middle, ring, little].every(
     (state) => state === "curled",
   );
+  // A fist (thumb tucked) is deliberately nothing: a pen grip looks the same.
   if (thumbExtended && allCurled) return "thumbs-up";
-  if (!thumbExtended && allCurled) return "fist";
   return "none";
 };
 

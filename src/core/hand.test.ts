@@ -88,6 +88,7 @@ const OPEN_PALM: HandShape = {
   ring: "extended",
   little: "extended",
 };
+/** Every finger curled, thumb tucked: also how a hand holds a pen. */
 const FIST: HandShape = {
   thumb: "tucked",
   index: "curled",
@@ -102,7 +103,7 @@ const OK_SIGN: HandShape = {
   ring: "extended",
   little: "extended",
 };
-/** Index and middle up, others down — a "two" that maps to nothing. */
+/** Index and middle up side by side, others down — maps to nothing. */
 const NEUTRAL: HandShape = {
   thumb: "tucked",
   index: "extended",
@@ -127,6 +128,23 @@ const GUN: HandShape = {
   little: "curled",
 };
 
+/** NEUTRAL with the index and middle fanned out from their knuckles: a V. */
+const peaceSign = (): Hand => {
+  const hand = syntheticHand(NEUTRAL);
+  return {
+    ...hand,
+    points: {
+      ...hand.points,
+      indexPip: point(0.42, 0.53),
+      indexDip: point(0.405, 0.48),
+      indexTip: point(0.39, 0.44),
+      middlePip: point(0.51, 0.53),
+      middleDip: point(0.525, 0.48),
+      middleTip: point(0.54, 0.44),
+    },
+  };
+};
+
 describe("classifyHand", () => {
   it("recognises thumbs-up", () => {
     expect(classifyHand(syntheticHand(THUMBS_UP))).toBe("thumbs-up");
@@ -136,15 +154,19 @@ describe("classifyHand", () => {
     expect(classifyHand(syntheticHand(OPEN_PALM))).toBe("open-palm");
   });
 
-  it("recognises a fist", () => {
-    expect(classifyHand(syntheticHand(FIST))).toBe("fist");
+  it("recognises a peace sign", () => {
+    expect(classifyHand(peaceSign())).toBe("peace-sign");
+  });
+
+  it("returns none for a fist, which a pen grip resembles", () => {
+    expect(classifyHand(syntheticHand(FIST))).toBe("none");
   });
 
   it("recognises the ok sign", () => {
     expect(classifyHand(syntheticHand(OK_SIGN))).toBe("ok-sign");
   });
 
-  it("returns none for a neutral hand", () => {
+  it("returns none for two fingers up side by side", () => {
     expect(classifyHand(syntheticHand(NEUTRAL))).toBe("none");
   });
 
@@ -186,7 +208,7 @@ describe("classifyGesture", () => {
   });
 
   it("passes a single hand's pose through", () => {
-    expect(classifyGesture({ hands: [syntheticHand(FIST)] })).toBe("fist");
+    expect(classifyGesture({ hands: [peaceSign()] })).toBe("peace-sign");
   });
 
   it("turns two thumbs-up into two-thumbs-up", () => {

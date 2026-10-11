@@ -69,18 +69,18 @@ describe("hold tracker", () => {
 
   it("re-arms only after the gesture has been gone for 500 ms", () => {
     const tracker = new HoldTracker();
-    const first = run(repeat("fist", 21), tracker);
+    const first = run(repeat("peace-sign", 21), tracker);
     expect(first.fired).toHaveLength(1);
     // Gone for 400 ms, then back: no re-arm, no second fire.
     const tooShort = run(
-      [...repeat("none", 4), ...repeat("fist", 25)],
+      [...repeat("none", 4), ...repeat("peace-sign", 25)],
       tracker,
       first.endMs,
     );
     expect(tooShort.fired).toEqual([]);
     // Gone for 500 ms, then held for 2 s: fires again.
     const longEnough = run(
-      [...repeat("none", 5), ...repeat("fist", 21)],
+      [...repeat("none", 5), ...repeat("peace-sign", 21)],
       tracker,
       tooShort.endMs,
     );

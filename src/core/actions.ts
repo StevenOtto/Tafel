@@ -7,13 +7,14 @@
 
 import { Gesture, GESTURES } from "./hand";
 
-export const DEFAULT_ENABLED_GESTURES: readonly Gesture[] = [
-  "thumbs-up",
-  "two-thumbs-up",
-  "open-palm",
-  "ok-sign",
-  "pointing",
-];
+/**
+ * Settings store the gestures switched off, so a gesture added later starts
+ * on; this turns that list into the gestures that may act.
+ */
+export const enabledGestures = (
+  disabled: readonly Gesture[],
+): readonly Gesture[] =>
+  GESTURES.filter((gesture) => !disabled.includes(gesture));
 
 export type CameraStatus = "watching" | "paused";
 
@@ -28,7 +29,7 @@ export const gestureVisibleWhen = (
 ): Gesture => {
   if (!enabled.includes(gesture)) return "none";
   if (status === "watching") return gesture;
-  return gesture === "open-palm" ? "open-palm" : "none";
+  return gesture === "peace-sign" ? "peace-sign" : "none";
 };
 
 /** The status change a fired gesture causes, if any. */
@@ -36,6 +37,6 @@ export const statusChange = (
   gesture: Gesture,
   status: CameraStatus,
 ): CameraStatus | null => {
-  if (status === "paused") return gesture === "open-palm" ? "watching" : null;
-  return gesture === "fist" ? "paused" : null;
+  if (status === "paused") return gesture === "peace-sign" ? "watching" : null;
+  return gesture === "open-palm" ? "paused" : null;
 };

@@ -7,8 +7,14 @@
  * — the per-camera work lives in CameraTile.
  */
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { statusChange } from "../core/actions";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { enabledGestures as gesturesOn, statusChange } from "../core/actions";
 import { agePhrase } from "../core/age";
 import { ActionGate } from "../core/actionGate";
 import {
@@ -71,7 +77,6 @@ import {
   switchSession,
 } from "./tauri";
 
-import { DEFAULT_ENABLED_GESTURES } from "../core/actions";
 import visualWorkflow from "../../skills/tafel-visual-prompting/references/workflow.md?raw";
 
 const GUIDE: readonly {
@@ -92,8 +97,13 @@ const GUIDE: readonly {
     label: "Two thumbs",
     action: "All cameras",
   },
-  { gesture: "fist", glyph: "✊", label: "Fist", action: "Pause" },
-  { gesture: "open-palm", glyph: "✋", label: "Open hand", action: "Resume" },
+  { gesture: "open-palm", glyph: "✋", label: "Open hand", action: "Pause" },
+  {
+    gesture: "peace-sign",
+    glyph: "✌️",
+    label: "Peace sign",
+    action: "Resume",
+  },
   {
     gesture: "ok-sign",
     glyph: "👌",
@@ -101,6 +111,8 @@ const GUIDE: readonly {
     action: "Start / finish a collection",
   },
 ];
+
+const NO_GESTURES: readonly Gesture[] = [];
 
 /** The inline name field: naming the current session, or starting a new one. */
 interface SessionDraft {
@@ -210,7 +222,12 @@ export const ControlApp = (): React.JSX.Element => {
   const cameras = settings?.cameras ?? [];
   const holdMs = settings?.holdMs ?? 2000;
   const gesturesEnabled = settings?.gesturesEnabled ?? true;
-  const enabledGestures = settings?.enabledGestures ?? DEFAULT_ENABLED_GESTURES;
+  const disabledGestures = settings?.disabledGestures ?? NO_GESTURES;
+  // Stable identity: the tiles restart their hold tracking when it changes.
+  const enabledGestures = useMemo(
+    () => gesturesOn(disabledGestures),
+    [disabledGestures],
+  );
 
   // ----- boot: settings + device list, kept fresh on devicechange -----
   useEffect(() => {
@@ -469,7 +486,7 @@ export const ControlApp = (): React.JSX.Element => {
       if (change) {
         announce(
           change === "paused"
-            ? "Paused — show an open hand to resume"
+            ? "Paused — show a peace sign to resume"
             : "Watching again",
         );
         return;
@@ -709,12 +726,12 @@ export const ControlApp = (): React.JSX.Element => {
   // watching camera, deliberately, so the gate is bypassed.
   const triggerGesture = useCallback(
     (gesture: Gesture) => {
-      if (gesture === "fist") {
+      if (gesture === "open-palm") {
         setForcePaused(true);
-        announce("Paused — click Open hand or show one to resume");
+        announce("Paused — click Peace sign or show one to resume");
         return;
       }
-      if (gesture === "open-palm") {
+      if (gesture === "peace-sign") {
         setForcePaused(false);
         announce("Watching again");
         return;
@@ -885,22 +902,18 @@ export const ControlApp = (): React.JSX.Element => {
                         disabled={!gesturesEnabled}
                         onChange={(event) =>
                           void updateSettings({
-                            enabledGestures: event.target.checked
-                              ? [...enabledGestures, entry.gesture]
-                              : enabledGestures.filter(
+                            disabledGestures: event.target.checked
+                              ? disabledGestures.filter(
                                   (gesture) => gesture !== entry.gesture,
-                                ),
+                                )
+                              : [...disabledGestures, entry.gesture],
                           })
                         }
                       />
                       {entry.label}
-                      {entry.gesture === "fist" ? " — pause (opt-in)" : ""}
                     </label>
                   ))}
-                  <p className="control__hint">
-                    Fist is off by default because a pen grip can look similar.
-                    Buttons always work.
-                  </p>
+                  <p className="control__hint">Buttons always work.</p>
                 </fieldset>
                 <div className="control__field">
                   <label htmlFor="hold-ms">
