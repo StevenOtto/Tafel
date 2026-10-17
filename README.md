@@ -5,12 +5,16 @@ cameras watch your desk and wall; you control each with hand gestures, and the
 snapshots you ask for are served to Claude over MCP, with an MCP App card
 rendering them inside the conversation.
 
-Hand detection uses Apple Vision on-device, there are no
-API keys, and the only network listener is a local MCP endpoint on
-`127.0.0.1`. The one outbound path is fetching frames from a network camera
-you add, and only ever to a host on your local network (loopback, private, or
-`.local`) — enforced in Rust; the app never reaches the public internet.
-macOS 12+ only.
+Hand detection runs on the machine: Apple Vision on macOS, and Google's
+MediaPipe hand models run in Rust on Linux and Windows (the models only, not
+MediaPipe's runtime, which reports usage to Google). There are no API keys,
+and the only network listener is a local MCP endpoint on `127.0.0.1`. The one
+outbound path is fetching frames from a network camera you add, and only ever
+to a host on your local network (loopback, private, or `.local`) — enforced
+in Rust; the app never reaches the public internet.
+
+Runs on macOS 12+. Linux and Windows builds are new and not released yet;
+see `specs/2026-10-17-linux-and-windows.md` for what has been verified.
 
 See `DESIGN.md` for the architecture and `specs/` for the dated specs behind
 each change (on-device OCR was added in August and removed again in
@@ -83,9 +87,14 @@ as a network camera instead.
 
 ## Running
 
-- Dev: `npm install && npm run tauri dev` (Rust toolchain required).
+- Dev: `npm install && npm run tauri dev` (Rust toolchain required). On
+  Linux, install the WebKitGTK development packages first (on Debian and
+  Ubuntu: `libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev`); cameras also
+  need GStreamer's `gstreamer1.0-plugins-good`.
 - Build the app bundle: `npm run tauri build` → artifact at
-  `src-tauri/target/release/bundle/macos/Tafel.app` (plus a `.dmg`).
+  `src-tauri/target/release/bundle/macos/Tafel.app` (plus a `.dmg`). On
+  Linux it builds a `.deb` and an AppImage, on Windows an NSIS installer;
+  neither is signed yet.
 - Tests: `npm test` (TypeScript) and `cargo test` in `src-tauri/` (Rust).
   Both pass on a machine with no camera. The Rust build compiles the Swift
   bridge in `src-tauri/swift/TafelVision` (Xcode command line tools
@@ -156,7 +165,7 @@ precedes) is also said in the status line, as is the agent naming a session
 ("The agent named this session 'Kiosk'"). The same section states the deal
 in three sentences: while a camera is watching, a connected agent can look at
 your desk at any time and receives what you send; Pause stops both; sent
-snapshots stay on this Mac until you delete them.
+snapshots stay on this computer until you delete them.
 
 It also shows whether an agent is **listening** (a `wait_for_delivery` call is
 open) and what happened to the latest prompt: saved locally, delivered to the
@@ -228,7 +237,7 @@ Switch, name/rename and delete sessions from the **Session** menu above the
 delivery history in the app; deleting asks first and really removes the files.
 Open a delivery to see it large with its camera names, or to **Remove** it
 from the session (files included). Removing or deleting takes the files off
-this Mac; anything the agent already received stays in that conversation, and
+this computer; anything the agent already received stays in that conversation, and
 the confirmation says so.
 The agent can only start and name sessions. The panel shows where sessions are
 stored and how much space they take. Nothing is pruned automatically. Note the
@@ -244,9 +253,13 @@ their session.
   gesture → action table incl. the paused state.
 - `src/core/gesture.recorded.test.ts` replays every recording under
   `fixtures/gestures/` (see below) through the same classifier and tracker.
-- `src-tauri/src/vision.rs` runs Apple Vision on a blank image (0 hands), on
+- `src-tauri/src/vision.rs` runs the platform's hand detector (Apple Vision
+  on macOS, the Rust MediaPipe port elsewhere) on a blank image (0 hands), on
   garbage bytes (clean error) and — when you drop a photo at
   `src-tauri/fixtures/hand.jpg` — on a real hand (≥ 1 hand, 21 joints).
+  `src-tauri/src/vision/landmarker.rs` covers the port's anchors, crop
+  geometry, palm merging and image sampling. CI runs both suites on macOS,
+  Linux and Windows, with MediaPipe's public thumbs-up photo as the hand.
 - `src-tauri/src/settings.rs` proves the camera selection survives a restart
   and that a settings file from the earlier prototype-era app still loads.
 - `src-tauri/src/sessions.rs` covers the session rules on a temp dir: the
