@@ -1,7 +1,8 @@
 # Linux and Windows: research for feature parity
 
-`2026-10-17` · research only, no product code changed · status: awaiting
-decisions (see "Open decisions")
+`2026-10-17` · research, then implemented the same day · status:
+implemented on Linux and Windows, Windows untested beyond CI (see "Pending
+manual checks")
 
 ## Question
 
@@ -10,6 +11,12 @@ as on macOS? The working assumption was that hand gestures are the main
 challenge and that Tauri makes the rest easy.
 
 ## Short answer
+
+Update after the research: the recommended backend (option A) turned out to
+send usage metrics to Google, so the implementation uses option B, a Rust
+port of MediaPipe's pipeline. See "Decisions" and "Implementation" below; the
+sections up to "Verification done for this research" are the research as
+written before that.
 
 The assumption is half right. Getting hand landmarks on Linux and Windows is
 solved and measured below: Google's MediaPipe hand models produce the same 21
@@ -35,7 +42,7 @@ platform.
 | Hand landmarks           | `src-tauri/src/vision.rs`, `swift/TafelVision`, `build.rs`                                                                            | New backend needed (below)                                                                                         |
 | Build gate               | `src-tauri/src/lib.rs:1` (`compile_error!`), `swift-rs` in `Cargo.toml`, Swift linking in `build.rs`                                  | Gate on target OS; done in the experiment below                                                                    |
 | Camera capture           | `src/app/cameraSource.ts` (`getUserMedia` in the webview)                                                                             | Works in WebView2; WebKitGTK needs a permission handler and GStreamer plugins                                      |
-| Window chrome            | `tauri.conf.json`: `macOSPrivateApi`, `titleBarStyle: Overlay`, `transparent`, `windowEffects: sidebar`                               | Move to `tauri.macos.conf.json`; opaque window with native decorations elsewhere                                   |
+| Window chrome            | `tauri.conf.json`: `macOSPrivateApi`, `titleBarStyle: Overlay`, `transparent`, `windowEffects: sidebar`                               | `tauri.<os>.conf.json` gives Linux and Windows an opaque window with native decorations                            |
 | Styling                  | `src/styles.css:1-5,53` (transparent body over vibrancy), `:77` (toolbar under the traffic lights)                                    | Opaque background and no traffic-light inset on other platforms                                                    |
 | Wording                  | "this Mac" in `src/app/ControlApp.tsx:1131,1326,1445`, `README.md`, `site/`                                                           | "this computer"                                                                                                    |
 | Session storage location | `app_data_dir()` in `src-tauri/src/lib.rs` (setup)                                                                                    | On Windows this is Roaming AppData; session images belong in `app_local_data_dir()` (same path on macOS and Linux) |
@@ -54,7 +61,8 @@ joint order matches `JOINT_NAMES` in `src/core/hand.ts` one to one, so index
 `i` maps to `JOINT_NAMES[i]`. Coordinates are frame fractions with the origin
 top-left, as Tafel already expects.
 
-**A. MediaPipe's native library through Rust FFI (recommended).** MediaPipe
+**A. MediaPipe's native library through Rust FFI (recommended at first,
+then rejected: see "Decisions").** MediaPipe
 1.x (1.1.1, 2026-10-14) ships a C library, `libmediapipe`, with a versioned
 C API (`MpHandLandmarkerCreate`, `MpHandLandmarkerDetectImage`,
 `MpHandLandmarkerDetectForVideo`, symbol version `VERS_1.0`). The official
@@ -72,7 +80,7 @@ Upstream Bazel builds `libmediapipe.so` from source and already has
 vision-only targets for its Apple frameworks, so a smaller vision-only build
 looks possible, at the cost of a Bazel build in CI.
 
-**B. Own two-stage pipeline in Rust over ONNX.** The `.tflite` models convert
+**B. Own two-stage pipeline in Rust over ONNX (chosen).** The `.tflite` models convert
 to ONNX with `tf2onnx`; outputs match the originals to a relative difference
 of 7e-6. Pure-Rust runtimes (`rten` 0.27, `tract` 0.23.9) load and run both
 models with no native dependency, and their outputs match ONNX Runtime to 5
@@ -91,10 +99,10 @@ would be needed, and WebGL on WebKitGTK is the least reliable part of the
 Linux stack. It also widens the webview CSP, a boundary in `AGENTS.md`, and
 moves landmark work out of Rust, against the current layering.
 
-**macOS: keep Apple Vision (recommended).** MediaPipe ships only arm64 for
+**macOS: keep Apple Vision (chosen).** MediaPipe ships only arm64 for
 macOS, so Intel Macs would lose gestures. Vision adds nothing to the bundle,
 and its behavior is the reference the classifier was tuned on. The cost is
-two backends that must stay in parity, which the harness under "Plan" step 4
+two backends that must stay in parity, which the harness under "Next steps"
 addresses.
 
 ## Measurements
@@ -226,56 +234,148 @@ All experiments ran outside the working tree, in a scratch copy of `HEAD`
   native (non-mock) GStreamer capture; Rust FFI to `libmediapipe` (exercised
   through the official Python wrapper over the same C API instead); packaging.
 
-## Plan (if option A and Vision-on-macOS are accepted)
+## Decisions (2026-10-17)
 
-1. **Build split and CI.** Land the gating from the experiment, with
-   `vision.rs` split into an Apple backend and a MediaPipe backend behind the
-   unchanged `detect_hands` command and `Detection` type. Add a CI workflow
-   running `cargo test` and `npm test` on Linux and Windows; none exists
-   today.
-2. **MediaPipe backend.** FFI wrapper over `MpHandLandmarker` in image mode,
-   which keeps `detect_hands` stateless (video mode would need a camera id and
-   timestamp per call and saves little, per the table). Map the hand score
-   onto every joint's `confidence`. Rust tests mirror the existing Vision
-   tests: a blank image yields no hands, garbage bytes yield an error, and an
-   optional local hand photo yields 21 joints.
-3. **Window, camera and copy.** Tauri 2.12, window built in code with the
-   camera permission handler, platform config files, opaque styling and
-   native decorations off macOS, "this computer" wording, session storage in
-   `app_local_data_dir()`.
-4. **Parity harness on a Mac.** MediaPipe also runs on Apple silicon, so one
-   Mac can run both backends over the same frames. Record short JPEG
-   sequences of each gesture, plus pen grips and paper flattening as
-   negatives, from real desk and wall cameras. Keep them local and untracked
-   like `fixtures/hand.jpg`, since they are private desk images. Compare
-   gesture output per frame between Vision and MediaPipe, then tune or split
-   thresholds until the fire sequences match. Commit only the derived
-   landmark JSONL fixtures, if the user agrees they contain nothing private.
-5. **Packaging and release.** Linux `.deb` and AppImage first (WebKitGTK,
-   GStreamer camera plugins, EGL; Tauri's AppImage option to bundle the media
-   framework), Windows NSIS installer with code signing, a release matrix,
-   and per-OS download links on the site.
+The user accepted the recommendations: keep Apple Vision on macOS, use an
+opaque window with native decorations on Linux and Windows, and ship option
+A's prebuilt library first.
 
-Rough sizing, a guess rather than a measurement: steps 1 to 3 take 5 to 8
-working days; step 4 takes 3 to 5 days and is open-ended, because its outcome
-depends on what the recordings show; step 5 takes 3 to 5 days plus waiting
-time for a Windows signing identity.
+Option A then failed a check made before writing code. MediaPipe 1.1.1's
+prebuilt library opens a connection to `play.googleapis.com:443` while it
+runs (seen with `strace`: `CONNECT play.googleapis.com:443` through the
+proxy), also when, as Tafel would, the caller leaves every host field and the
+CA bundle empty. The package's own `NOTICE` says so: "MediaPipe Tasks APIs
+send metrics about the performance and utilization of the APIs in your app to
+Google." The open-source build swaps in a dummy logger, but Google publishes no
+binaries of it. Shipping the prebuilt library would break Tafel's promise that
+it never reaches the public internet, so the user chose option B.
 
-## Open decisions
+## Implementation
 
-1. Landmark backend for Linux and Windows: A (MediaPipe library through FFI,
-   recommended), B (own Rust pipeline over ONNX), or C (WASM in the webview,
-   which also requires widening the CSP).
-2. macOS backend: keep Apple Vision (recommended) or switch to MediaPipe
-   everywhere (one backend, but drops gestures on Intel Macs).
-3. For A: ship the prebuilt library from the official release (62 to 94 MB
-   per platform) or build a vision-only library with Bazel in CI (smaller,
-   more CI work). Prebuilt is enough for a first working build either way.
-4. Window chrome off macOS: native decorations with an opaque window
-   (recommended, least code) or custom chrome with Mica on Windows 11.
-5. Order: Windows first (lower camera risk, more users) or Linux first
-   (testable in CI and in cloud sessions).
-6. Distribution: which Linux formats, and which Windows signing route.
+- **Models.** `src-tauri/models/` holds the two models as ONNX with float16
+  weights (2.3 MB and 5.5 MB), `convert.py` to regenerate them with pinned
+  versions and a drift check against the TFLite originals, the Apache 2.0
+  license, and a README with provenance. tract cannot load the `.tflite`
+  files directly (an unsupported operator), so conversion is needed.
+- **Pipeline.** `src-tauri/src/vision/landmarker.rs` ports MediaPipe's image
+  mode: letterbox to 192 x 192 with black bars, 2016 SSD anchors, sigmoid
+  scores kept from 0.5, weighted non-max suppression at IoU 0.3, the
+  palm-to-hand rectangle (rotated from wrist to middle knuckle, shifted half
+  a palm toward the fingers, squared, 2.6 times the palm), a bilinear rotated
+  crop to 224 x 224 with corners mapped as in MediaPipe's OpenCV path, a
+  presence threshold of 0.5, and landmarks projected back through the same
+  rectangle. Input values run from 0 to 1, chosen by testing both ranges.
+  Handedness is MediaPipe's label as is: on a photo where the true hands are
+  known it named them correctly, so the mirrored-selfie caveat in
+  MediaPipe's older docs does not apply. Every joint's confidence is the
+  hand-presence score. The models are embedded in the binary and load once.
+  `detect_hands` stays stateless: no tracking between frames.
+- **Backends.** `src-tauri/src/vision.rs` keeps the shared types and tests;
+  `vision/apple.rs` holds the unchanged Swift call; the target OS picks one.
+  `build.rs` links Swift only for macOS targets; `swift-rs` is a macOS-only
+  dependency and `rten`, `rten-tensor` and `image` are non-macOS ones. Dev
+  builds optimize the inference crates and turn off their debug assertions,
+  which otherwise make inference about 1.5 times slower.
+- **Tauri** 2.11.5 → 2.12.4 for the crate, 2.12.4 and 2.12.3 for
+  `@tauri-apps/api` and `@tauri-apps/cli`. The npm install also dropped two
+  stale `pngjs` entries from the lockfile that `package.json` no longer lists.
+- **Window.** `tauri.linux.conf.json` and `tauri.windows.conf.json` replace the
+  window with an opaque one with native decorations and `create: false`;
+  `lib.rs` builds it in `setup` with `on_permission_request` granting
+  `Camera` and leaving every other request to the webview's default. macOS
+  still creates its window from `tauri.conf.json`, unchanged.
+- **Styling.** `src/core/platform.ts` reads the OS from the user agent,
+  `main.tsx` sets `data-platform`, and `styles.css` gives Linux and Windows an
+  opaque `--window` background without the traffic-light inset. macOS styles
+  are unchanged.
+- **Wording.** "this Mac" became "this computer" in the three UI strings and
+  the README.
+- **Storage.** Sessions and recordings now live under
+  `app_local_data_dir()`: the same path as before on macOS and Linux, and on
+  Windows it keeps images out of the roaming profile. Settings stay in
+  `app_data_dir()`.
+- **Packaging.** Linux `.deb` (depends on `gstreamer1.0-plugins-good`) and
+  AppImage (bundles the media framework); Windows NSIS installer. Nothing is
+  signed yet, and the release workflow and site still ship macOS only.
+- **CI.** `.github/workflows/ci.yml` runs `npm test`, `npm run build` and
+  `cargo test` on Ubuntu 24.04, Windows 2025 and macOS 15. On Linux and
+  Windows it downloads MediaPipe's public thumbs-up photo (SHA-256 pinned) as
+  `fixtures/hand.jpg`, so the hand test runs on a real hand.
+- **Docs.** README, DESIGN.md, and AGENTS.md, which gains a boundary: do not
+  use MediaPipe's runtime.
+
+## Verification of the implementation (Linux, this container)
+
+- `cargo test`: 72 passed, 0 failed: 63 existing, 6 new pipeline unit tests,
+  and the 3 backend tests now running the port (the hand test on
+  `thumb_up.jpg`). `cargo clippy --all-targets`: one existing warning in
+  `settings.rs`, none in new code.
+- `npm test`: 80 passed (77 existing, 3 new), 1 file skipped (no
+  recordings). `npx tsc --noEmit` clean, `npm run build` fine, Prettier clean
+  on changed files.
+- Landmark accuracy against the official MediaPipe 1.1.1 library in image
+  mode, mean (max) distance per joint: thumbs-up photo 5.4 px (10.3 px) on a
+  palm about 100 px long; relaxed hands 2.1 px (7.9 px) and 1.6 px (3.4 px).
+  The official library's own image-mode and video-mode results differ by
+  5.1 px, 1.6 px and 2.1 px on the same photos, so the port is within
+  MediaPipe's own variation. Handedness matches on all three hands, and
+  Tafel's classifier gives `thumbs-up` and `none`, `none`, as it does on the
+  official landmarks.
+- Speed, release build, on this 2.1 GHz cloud CPU: 55 ms per frame with one
+  hand, 84 ms with two, about 30 ms with none. Convolutions are 83% of the
+  detector's time. Debug build: about 92 ms with one hand. MediaPipe's own
+  runtime takes 21 to 25 ms for the same frames.
+- End to end: the real app (dev build with Vite) under Xvfb, with the
+  thumbs-up photo served as a local network camera. The hold fired, and the
+  MCP server returned delivery #1 with trigger `thumbs-up`, camera "Desk" and
+  its image. A screenshot showed the opaque window, the green ring and the
+  delivery in the session strip. The run needed a temporary fix for the
+  network-camera bug below, reverted afterwards.
+- `npm run tauri build -- --bundles deb`: a 14.2 MB package, 35.7 MB
+  installed, depending on `gstreamer1.0-plugins-good`, `libwebkit2gtk-4.1-0`
+  and `libgtk-3-0`.
+
+## Pending manual checks
+
+- Windows: nothing has run there beyond CI. Needs a real camera, the
+  permission handler (no WebView2 prompt expected), styling, and the NSIS
+  installer.
+- Linux with a real webcam through GStreamer (V4L2 or PipeWire), several
+  cameras at once, and hot-plug.
+- macOS: behavior should be unchanged (window from config, Vision, same data
+  directory); CI only builds and tests it.
+- Gesture parity on real desk and wall cameras, from above, and false
+  triggers from pen grips now that joints carry no confidence of their own.
+- CPU load with two or three cameras at 10 fps on typical laptops.
+- Whether the Linux Claude Desktop beta renders the MCP card.
+
+## Found along the way, not fixed here
+
+Network cameras lose their URL when settings are saved. The Rust `Camera` in
+`src-tauri/src/settings.rs` has no `url` field, so `set_settings` drops it,
+and after a restart the camera no longer counts as a network camera. The fix
+is an optional `url` field with
+`#[serde(default, skip_serializing_if = "Option::is_none")]`. It affects
+every platform and is left for a separate change.
+
+## Next steps
+
+1. Watch CI on all three platforms and fix what it finds.
+2. Run the pending manual checks.
+3. Parity harness: record JPEG sequences of each gesture and of pen grips
+   from real cameras (local and untracked), run both backends on a Mac, where
+   rten runs too, and tune thresholds if the fire sequences differ.
+4. If CPU load is too high: track hands between frames to skip the palm
+   detector, or detect less often while no hand is in view.
+5. Release: Windows signing and distribution decisions, a release matrix,
+   per-OS links on the site.
+
+## Remaining open decisions
+
+1. Order of manual testing: Windows first (more users, Chromium's camera
+   stack) or Linux first.
+2. Distribution: Linux formats beyond `.deb` and AppImage, and the Windows
+   signing route.
 
 ## Sources
 
@@ -298,3 +398,9 @@ time for a Windows signing identity.
 - Windows 11 multi-app camera:
   https://pureinfotech.com/allow-multiple-apps-use-camera-windows-11/
 - Claude Desktop for Linux beta: https://claude.com/download
+- MediaPipe base options, "CA bundle to use for usage logging":
+  https://github.com/google-ai-edge/mediapipe/blob/master/mediapipe/tasks/c/core/base_options.h
+- MediaPipe's open-source dummy logger:
+  https://github.com/google-ai-edge/mediapipe/blob/master/mediapipe/tasks/cc/core/logging/factory/logging_factory.cc
+- Model card for MediaPipe Hands (Lite/Full), Apache 2.0:
+  https://storage.googleapis.com/mediapipe-assets/Model%20Card%20Hand%20Tracking%20(Lite_Full)%20with%20Fairness%20Oct%202021.pdf

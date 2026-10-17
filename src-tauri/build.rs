@@ -11,6 +11,12 @@ const SWIFT_RS_HELPERS: [&str; 4] = [
 ];
 
 fn main() {
+    // The Swift bridge to Apple Vision is macOS-only; other targets run the
+    // hand models in Rust (src/vision/landmarker.rs).
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("macos") {
+        tauri_build::build();
+        return;
+    }
     // Must match `minimumSystemVersion` in tauri.conf.json and the platform
     // in swift/TafelVision/Package.swift.
     SwiftLinker::new("12.0")
